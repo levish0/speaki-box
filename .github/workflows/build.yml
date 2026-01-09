@@ -86,11 +86,18 @@ jobs:
       - name: Prepare macOS artifact
         if: matrix.os == 'macos-latest'
         run: |
+          # Get version from git tag (v0.1.10 -> 0.1.10) or fallback to Cargo.toml
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          fi
           mkdir -p "dist/Speaki Box.app/Contents/MacOS"
           mkdir -p "dist/Speaki Box.app/Contents/Resources"
           cp target/${{ matrix.target }}/release/${{ matrix.binary }} "dist/Speaki Box.app/Contents/MacOS/speaki-box"
+          chmod +x "dist/Speaki Box.app/Contents/MacOS/speaki-box"
           cp assets/logo.png "dist/Speaki Box.app/Contents/Resources/AppIcon.png"
-          cat > "dist/Speaki Box.app/Contents/Info.plist" << 'EOF'
+          cat > "dist/Speaki Box.app/Contents/Info.plist" << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -102,9 +109,9 @@ jobs:
               <key>CFBundleIdentifier</key>
               <string>com.levish.speakibox</string>
               <key>CFBundleVersion</key>
-              <string>0.1.9</string>
+              <string>${VERSION}</string>
               <key>CFBundleShortVersionString</key>
-              <string>0.1.9</string>
+              <string>${VERSION}</string>
               <key>CFBundleExecutable</key>
               <string>speaki-box</string>
               <key>CFBundleIconFile</key>
@@ -116,6 +123,7 @@ jobs:
           </dict>
           </plist>
           EOF
+          xattr -cr "dist/Speaki Box.app"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

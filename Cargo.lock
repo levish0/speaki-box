@@ -4567,7 +4567,7 @@ dependencies = [
 
 [[package]]
 name = "speaki-box"
-version = "0.1.10"
+version = "0.1.11"
 dependencies = [
  "bevy",
  "bevy_egui",
