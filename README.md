@@ -1,6 +1,10 @@
 # speaki-box
 
-A desktop pet application featuring Speaki(스피키) characters with physics simulation.
+<p align="center">
+  <img src="assets/img/speaki1.png" alt="Speaki" width="200" style="border-radius: 20px;">
+</p>
+
+A pet application featuring Speaki(스피키) characters with physics simulation.
 
 ## Features
 

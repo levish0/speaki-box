@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Speaki Box
+Comment=Desktop pet application with Speaki characters
+Exec=speaki-box
+Icon=speaki-box
+Terminal=false
+Type=Application
+Categories=Game;

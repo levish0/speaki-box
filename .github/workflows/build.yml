@@ -18,11 +18,11 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact: speaki-box-linux
+            artifact: speaki-box-linux-x64
             binary: speaki-box
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact: speaki-box-windows
+            artifact: speaki-box-windows-x64
             binary: speaki-box.exe
           - os: macos-latest
             target: x86_64-apple-darwin
@@ -44,6 +44,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config libwayland-dev libxkbcommon-dev libudev-dev libasound2-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
 
+      - name: Convert PNG to ICO (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          choco install imagemagick -y
+          magick assets/logo.png -define icon:auto-resize=256,128,64,48,32,16 assets/logo.ico
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -61,12 +68,14 @@ jobs:
       - name: Build Release
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Package (Unix)
-        if: matrix.os != 'windows-latest'
+      - name: Package (Linux)
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          mkdir -p dist
-          cp target/${{ matrix.target }}/release/${{ matrix.binary }} dist/${{ matrix.artifact }}
-          cd dist && zip ${{ matrix.artifact }}.zip ${{ matrix.artifact }}
+          mkdir -p dist/${{ matrix.artifact }}
+          cp target/${{ matrix.target }}/release/${{ matrix.binary }} dist/${{ matrix.artifact }}/
+          cp assets/logo.png dist/${{ matrix.artifact }}/speaki-box.png
+          cp assets/speaki-box.desktop dist/${{ matrix.artifact }}/
+          cd dist && tar -czvf ${{ matrix.artifact }}.tar.gz ${{ matrix.artifact }}
 
       - name: Package (Windows)
         if: matrix.os == 'windows-latest'
@@ -76,11 +85,58 @@ jobs:
           Copy-Item target/${{ matrix.target }}/release/${{ matrix.binary }} dist/${{ matrix.artifact }}.exe
           Compress-Archive -Path dist/${{ matrix.artifact }}.exe -DestinationPath dist/${{ matrix.artifact }}.zip
 
+      - name: Package (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          APP_NAME="Speaki Box.app"
+          mkdir -p "dist/$APP_NAME/Contents/MacOS"
+          mkdir -p "dist/$APP_NAME/Contents/Resources"
+
+          # Copy binary
+          cp target/${{ matrix.target }}/release/${{ matrix.binary }} "dist/$APP_NAME/Contents/MacOS/speaki-box"
+
+          # Copy icon (convert to icns if possible, otherwise use png)
+          cp assets/logo.png "dist/$APP_NAME/Contents/Resources/AppIcon.png"
+
+          # Create Info.plist
+          cat > "dist/$APP_NAME/Contents/Info.plist" << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleName</key>
+              <string>Speaki Box</string>
+              <key>CFBundleDisplayName</key>
+              <string>Speaki Box</string>
+              <key>CFBundleIdentifier</key>
+              <string>com.levish.speakibox</string>
+              <key>CFBundleVersion</key>
+              <string>0.1.9</string>
+              <key>CFBundleShortVersionString</key>
+              <string>0.1.9</string>
+              <key>CFBundleExecutable</key>
+              <string>speaki-box</string>
+              <key>CFBundleIconFile</key>
+              <string>AppIcon</string>
+              <key>LSMinimumSystemVersion</key>
+              <string>10.13</string>
+              <key>NSHighResolutionCapable</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+
+          # Create zip
+          cd dist && zip -r ${{ matrix.artifact }}.zip "$APP_NAME"
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: dist/${{ matrix.artifact }}.zip
+          path: |
+            dist/${{ matrix.artifact }}.zip
+            dist/${{ matrix.artifact }}.tar.gz
+          if-no-files-found: ignore
 
   release:
     needs: build
@@ -98,5 +154,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/**/*.zip
+          files: |
+            artifacts/**/*.zip
+            artifacts/**/*.tar.gz
           generate_release_notes: true

@@ -3,6 +3,7 @@ mod events;
 mod resources;
 mod systems;
 
+use bevy::ecs::system::NonSendMarker;
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass, input::egui_wants_any_pointer_input};
 use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
@@ -77,7 +78,7 @@ fn main() {
         .add_message::<PlayVoiceEvent>()
         .add_message::<WallBounceEvent>()
         // Startup
-        .add_systems(Startup, (setup_camera, load_assets))
+        .add_systems(Startup, (setup_camera, load_assets, set_window_icon))
         .add_systems(Startup, spawn_initial_speakis.after(load_assets))
         // Input systems
         .add_systems(
@@ -146,6 +147,27 @@ fn main() {
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2d);
+}
+
+fn set_window_icon(_marker: NonSendMarker) {
+    // Embed logo at compile time
+    let icon_bytes = include_bytes!("../assets/logo.png");
+
+    let icon = match image::load_from_memory(icon_bytes) {
+        Ok(img) => {
+            let rgba = img.into_rgba8();
+            let (width, height) = rgba.dimensions();
+            let raw = rgba.into_raw();
+            winit::window::Icon::from_rgba(raw, width, height).ok()
+        }
+        Err(_) => None,
+    };
+
+    bevy::winit::WINIT_WINDOWS.with_borrow_mut(|winit_windows| {
+        for window in winit_windows.windows.values() {
+            window.set_window_icon(icon.clone());
+        }
+    });
 }
 
 fn load_assets(
