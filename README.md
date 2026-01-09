@@ -4,7 +4,7 @@
   <img src="assets/img/speaki1.png" alt="Speaki" width="200" style="border-radius: 20px;">
 </p>
 
-A pet application featuring Speaki(스피키) characters with physics simulation.
+A pet 'BOX' featuring Speaki(스피키) characters with physics simulation.
 
 ## Features
 

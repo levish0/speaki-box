@@ -75,4 +75,4 @@ name = "Speaki Box"
 identifier = "com.levish.speakibox"
 icon = ["assets/logo.png"]
 category = "Game"
-short_description = "A pet application featuring Speaki(스피키) characters with physics simulation."
+short_description = "A pet 'BOX' featuring Speaki(스피키) characters with physics simulation."
