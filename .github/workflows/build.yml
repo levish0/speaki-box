@@ -68,38 +68,29 @@ jobs:
       - name: Build Release
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Package (Linux)
+      - name: Prepare Linux artifact
         if: matrix.os == 'ubuntu-latest'
         run: |
-          mkdir -p dist/${{ matrix.artifact }}
-          cp target/${{ matrix.target }}/release/${{ matrix.binary }} dist/${{ matrix.artifact }}/
-          cp assets/logo.png dist/${{ matrix.artifact }}/speaki-box.png
-          cp assets/speaki-box.desktop dist/${{ matrix.artifact }}/
-          cd dist && tar -czvf ${{ matrix.artifact }}.tar.gz ${{ matrix.artifact }}
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/${{ matrix.binary }} dist/
+          cp assets/logo.png dist/speaki-box.png
+          cp assets/speaki-box.desktop dist/
 
-      - name: Package (Windows)
+      - name: Prepare Windows artifact
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist
-          Copy-Item target/${{ matrix.target }}/release/${{ matrix.binary }} dist/${{ matrix.artifact }}.exe
-          Compress-Archive -Path dist/${{ matrix.artifact }}.exe -DestinationPath dist/${{ matrix.artifact }}.zip
+          Copy-Item target/${{ matrix.target }}/release/${{ matrix.binary }} dist/
 
-      - name: Package (macOS)
+      - name: Prepare macOS artifact
         if: matrix.os == 'macos-latest'
         run: |
-          APP_NAME="Speaki Box.app"
-          mkdir -p "dist/$APP_NAME/Contents/MacOS"
-          mkdir -p "dist/$APP_NAME/Contents/Resources"
-
-          # Copy binary
-          cp target/${{ matrix.target }}/release/${{ matrix.binary }} "dist/$APP_NAME/Contents/MacOS/speaki-box"
-
-          # Copy icon (convert to icns if possible, otherwise use png)
-          cp assets/logo.png "dist/$APP_NAME/Contents/Resources/AppIcon.png"
-
-          # Create Info.plist
-          cat > "dist/$APP_NAME/Contents/Info.plist" << EOF
+          mkdir -p "dist/Speaki Box.app/Contents/MacOS"
+          mkdir -p "dist/Speaki Box.app/Contents/Resources"
+          cp target/${{ matrix.target }}/release/${{ matrix.binary }} "dist/Speaki Box.app/Contents/MacOS/speaki-box"
+          cp assets/logo.png "dist/Speaki Box.app/Contents/Resources/AppIcon.png"
+          cat > "dist/Speaki Box.app/Contents/Info.plist" << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -126,17 +117,11 @@ jobs:
           </plist>
           EOF
 
-          # Create zip
-          cd dist && zip -r ${{ matrix.artifact }}.zip "$APP_NAME"
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: |
-            dist/${{ matrix.artifact }}.zip
-            dist/${{ matrix.artifact }}.tar.gz
-          if-no-files-found: ignore
+          path: dist/
 
   release:
     needs: build
@@ -146,15 +131,39 @@ jobs:
       contents: write
 
     steps:
-      - name: Download Artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Package for release
+        run: |
+          cd artifacts
+
+          # Linux
+          if [ -d "speaki-box-linux-x64" ]; then
+            tar -czvf speaki-box-linux-x64.tar.gz -C speaki-box-linux-x64 .
+          fi
+
+          # Windows
+          if [ -d "speaki-box-windows-x64" ]; then
+            cd speaki-box-windows-x64 && zip ../speaki-box-windows-x64.zip * && cd ..
+          fi
+
+          # macOS x64
+          if [ -d "speaki-box-macos-x64" ]; then
+            cd speaki-box-macos-x64 && zip -r ../speaki-box-macos-x64.zip "Speaki Box.app" && cd ..
+          fi
+
+          # macOS ARM
+          if [ -d "speaki-box-macos-arm64" ]; then
+            cd speaki-box-macos-arm64 && zip -r ../speaki-box-macos-arm64.zip "Speaki Box.app" && cd ..
+          fi
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/**/*.zip
-            artifacts/**/*.tar.gz
+            artifacts/*.zip
+            artifacts/*.tar.gz
           generate_release_notes: true
