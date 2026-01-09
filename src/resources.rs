@@ -9,6 +9,9 @@ pub struct GameConfig {
     pub click_to_add: bool,
     pub eye_blink_enabled: bool,
     pub background_color: [f32; 3],
+    pub background_alpha: f32,
+    pub window_transparent: bool,
+    pub window_decorations: bool,
 }
 
 impl Default for GameConfig {
@@ -19,6 +22,9 @@ impl Default for GameConfig {
             click_to_add: true,
             eye_blink_enabled: true,
             background_color: [0.1, 0.1, 0.1],
+            background_alpha: 1.0,
+            window_transparent: false,
+            window_decorations: true,
         }
     }
 }
@@ -107,6 +113,24 @@ pub struct DragState {
     pub last_start_pos: Vec2,
     pub last_start_time: f32,
     pub last_click_time: f32, // For double-click detection
+}
+
+/// Window position tracking for inertia effect
+#[derive(Resource)]
+pub struct WindowPositionTracker {
+    pub last_position: Option<IVec2>,
+    pub enabled: bool,
+    pub strength: f32,
+}
+
+impl Default for WindowPositionTracker {
+    fn default() -> Self {
+        Self {
+            last_position: None,
+            enabled: true,
+            strength: 0.1,
+        }
+    }
 }
 
 /// Image state node for animation state machine

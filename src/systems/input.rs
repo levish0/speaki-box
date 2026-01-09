@@ -9,6 +9,7 @@ use crate::resources::*;
 pub fn mouse_input_system(
     mut commands: Commands,
     mouse_button: Res<ButtonInput<MouseButton>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
     window: Single<&Window>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
     speaki_query: Query<(Entity, &Transform, &SpeakiSize), With<Speaki>>,
@@ -16,12 +17,16 @@ pub fn mouse_input_system(
     config: Res<GameConfig>,
     time: Res<Time>,
     mut spawn_events: MessageWriter<SpawnSpeakiEvent>,
-    mut despawn_events: MessageWriter<DespawnSpeakiEvent>,
     mut voice_events: MessageWriter<PlayVoiceEvent>,
     voice_groups: Res<VoiceGroups>,
     audio_config: Res<AudioConfig>,
 ) {
     if !mouse_button.just_pressed(MouseButton::Left) {
+        return;
+    }
+
+    // Skip if Alt is pressed (window drag mode)
+    if keyboard.pressed(KeyCode::AltLeft) {
         return;
     }
 
@@ -49,32 +54,11 @@ pub fn mouse_input_system(
         let dist = (dx * dx + dy * dy).sqrt();
 
         if dist < size.0 / 2.0 {
-            // Check for double-click (100ms threshold)
-            if current_time - drag_state.last_click_time < 0.1 {
-                // Double-click: delete speaki
-                despawn_events.write(DespawnSpeakiEvent { entity });
-
-                // Play remove voice (random)
-                if !voice_groups.remove.is_empty() {
-                    let idx =
-                        voice_groups.remove[rand::rng().random_range(0..voice_groups.remove.len())];
-                    voice_events.write(PlayVoiceEvent {
-                        entity: Some(entity),
-                        voice_index: idx,
-                        volume: audio_config.remove_volume,
-                    });
-                }
-
-                drag_state.last_click_time = 0.0;
-                return;
-            }
-
-            // Single click: start dragging
+            // Start dragging
             drag_state.is_dragging = true;
             drag_state.dragged_entity = Some(entity);
             drag_state.last_start_pos = cursor_pos;
             drag_state.last_start_time = current_time;
-            drag_state.last_click_time = current_time;
 
             // Add Dragged marker
             commands.entity(entity).insert(Dragged);
@@ -329,4 +313,17 @@ pub fn spawn_speaki(
     }
 
     entity_commands.id()
+}
+
+/// Allow dragging window with Alt + Left Click
+pub fn window_drag_system(
+    mouse: Res<ButtonInput<MouseButton>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut windows: Query<&mut Window>,
+) {
+    if keyboard.pressed(KeyCode::AltLeft) && mouse.just_pressed(MouseButton::Left) {
+        for mut window in windows.iter_mut() {
+            window.start_drag_move();
+        }
+    }
 }

@@ -1,7 +1,11 @@
 [package]
 name = "speaki-box"
-version = "0.1.0"
+version = "0.1.8"
 edition = "2024"
+authors = ["Levi Lim <shiueo.csh@gmail.com>"]
+repository = "https://github.com/levish0/speaki-box"
+rust-version = "1.92.0"
+description = "스삐끼 네르지 마세요"
 
 [dependencies]
 bevy = { version = "0.17.3", default-features = false, features = [

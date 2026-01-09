@@ -12,11 +12,42 @@ use resources::*;
 use systems::*;
 
 fn main() {
+    // Check for --transparent flag or SPEAKI_TRANSPARENT env var
+    let args: Vec<String> = std::env::args().collect();
+    let transparent = args.contains(&"--transparent".to_string())
+        || std::env::var("SPEAKI_TRANSPARENT")
+            .map(|v| v == "1" || v.to_lowercase() == "true")
+            .unwrap_or(false);
+
+    println!("Transparent mode: {}", transparent);
+
+    // Set initial config based on transparent mode
+    let mut game_config = GameConfig::default();
+    if transparent {
+        game_config.background_alpha = 0.0;
+        game_config.window_transparent = true;
+        game_config.window_decorations = false;
+    }
+
+    let clear_color = if transparent {
+        ClearColor(Color::NONE)
+    } else {
+        ClearColor(Color::srgba(
+            game_config.background_color[0],
+            game_config.background_color[1],
+            game_config.background_color[2],
+            game_config.background_alpha,
+        ))
+    };
+
     App::new()
+        .insert_resource(clear_color)
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Speaki Box".to_string(),
                 resolution: bevy::window::WindowResolution::new(1280, 720),
+                transparent,
+                decorations: !transparent, // Hide title bar when transparent
                 ..default()
             }),
             ..default()
@@ -24,7 +55,7 @@ fn main() {
         .add_plugins(AudioPlugin)
         .add_plugins(EguiPlugin::default())
         // Resources
-        .init_resource::<GameConfig>()
+        .insert_resource(game_config)
         .init_resource::<PhysicsConfig>()
         .init_resource::<AudioConfig>()
         .init_resource::<BorderConfig>()
@@ -35,6 +66,7 @@ fn main() {
         .init_resource::<AudioAssets>()
         .init_resource::<ImageGroups>()
         .init_resource::<VoiceGroups>()
+        .init_resource::<WindowPositionTracker>()
         // Events
         .add_message::<SpawnSpeakiEvent>()
         .add_message::<DespawnSpeakiEvent>()
@@ -66,6 +98,7 @@ fn main() {
                 speaki_collision_system,
                 wall_collision_system,
                 rotation_system,
+                window_inertia_system,
             )
                 .chain(),
         )
@@ -90,8 +123,20 @@ fn main() {
             ),
         )
         // UI systems
-        .add_systems(Update, (toggle_settings_system, sync_background_color_system))
-        .add_systems(EguiPrimaryContextPass, (setup_fonts_system, settings_ui_system).chain())
+        .add_systems(
+            Update,
+            (
+                toggle_settings_system,
+                toggle_titlebar_system,
+                sync_background_color_system,
+                sync_window_settings_system,
+                window_drag_system,
+            ),
+        )
+        .add_systems(
+            EguiPrimaryContextPass,
+            (setup_fonts_system, settings_ui_system).chain(),
+        )
         .run();
 }
 

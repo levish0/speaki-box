@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::window::WindowMoved;
 
 use crate::components::*;
 use crate::events::*;
@@ -240,5 +241,37 @@ pub fn rotation_system(
     for (mut transform, rot) in query.iter_mut() {
         let angle = rot.speed * physics.rotation_speed;
         transform.rotate_z(angle);
+    }
+}
+
+/// Apply inertia when window moves - speakis react to window movement
+pub fn window_inertia_system(
+    mut moved_events: MessageReader<WindowMoved>,
+    mut tracker: ResMut<WindowPositionTracker>,
+    mut speaki_query: Query<&mut Velocity, (With<Speaki>, Without<Dragged>)>,
+) {
+    if !tracker.enabled {
+        return;
+    }
+
+    for event in moved_events.read() {
+        let current_pos = event.position;
+
+        if let Some(last_pos) = tracker.last_position {
+            let delta_x = (current_pos.x - last_pos.x) as f32;
+            let delta_y = (current_pos.y - last_pos.y) as f32;
+
+            // Only apply if there's significant movement
+            if delta_x.abs() > 0.5 || delta_y.abs() > 0.5 {
+                let strength = tracker.strength;
+                for mut vel in speaki_query.iter_mut() {
+                    // Apply opposite impulse (inertia effect)
+                    vel.x -= delta_x * strength;
+                    vel.y += delta_y * strength; // Y is inverted (screen vs bevy coords)
+                }
+            }
+        }
+
+        tracker.last_position = Some(current_pos);
     }
 }
