@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2026-01-10
+
+### Added
+- Embedded assets: all images and audio are now bundled into the binary (no separate assets folder needed)
+- Multi-platform CI builds: Windows, macOS (x64/ARM64), Linux
+- Automated GitHub Releases on version tags
+- README Features section with detailed descriptions of physics, audio, and settings
+
+### Removed
+- Double-click delete functionality
+
 ## [0.1.6] - 2026-01-10
 
 ### Added

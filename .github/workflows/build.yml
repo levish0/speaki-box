@@ -64,19 +64,17 @@ jobs:
       - name: Package (Unix)
         if: matrix.os != 'windows-latest'
         run: |
-          mkdir -p dist/${{ matrix.artifact }}
-          cp target/${{ matrix.target }}/release/${{ matrix.binary }} dist/${{ matrix.artifact }}/
-          cp -r assets dist/${{ matrix.artifact }}/
-          cd dist && zip -r ${{ matrix.artifact }}.zip ${{ matrix.artifact }}
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/${{ matrix.binary }} dist/${{ matrix.artifact }}
+          cd dist && zip ${{ matrix.artifact }}.zip ${{ matrix.artifact }}
 
       - name: Package (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path dist/${{ matrix.artifact }}
-          Copy-Item target/${{ matrix.target }}/release/${{ matrix.binary }} dist/${{ matrix.artifact }}/
-          Copy-Item -Recurse assets dist/${{ matrix.artifact }}/
-          Compress-Archive -Path dist/${{ matrix.artifact }} -DestinationPath dist/${{ matrix.artifact }}.zip
+          New-Item -ItemType Directory -Force -Path dist
+          Copy-Item target/${{ matrix.target }}/release/${{ matrix.binary }} dist/${{ matrix.artifact }}.exe
+          Compress-Archive -Path dist/${{ matrix.artifact }}.exe -DestinationPath dist/${{ matrix.artifact }}.zip
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
