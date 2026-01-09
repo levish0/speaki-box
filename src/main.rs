@@ -5,6 +5,7 @@ mod systems;
 
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass, input::egui_wants_any_pointer_input};
+use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
 use bevy_kira_audio::prelude::*;
 
 use events::*;
@@ -42,6 +43,9 @@ fn main() {
 
     App::new()
         .insert_resource(clear_color)
+        .add_plugins(EmbeddedAssetPlugin {
+            mode: PluginMode::ReplaceDefault,
+        })
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Speaki Box".to_string(),
