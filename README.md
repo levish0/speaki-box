@@ -29,6 +29,14 @@ A pet 'BOX' featuring Speaki(스피키) characters with physics simulation.
 - **Mouth Animation**: Mouth moves in sync with voice playback
 - **Sprite State Machine**: Multiple sprite states with smooth transitions
 
+### Shiny Speaki
+- **Rare Variant**: 5% chance to spawn a glowing speaki
+- **HDR Bloom**: Bright glow effect with camera bloom post-processing
+- **Pulse Animation**: Glow intensity pulses over time
+- **Explosion Ability**: Periodically pushes nearby speakis away
+- **Shockwave Effect**: Visible expanding ring when explosion triggers
+- Customizable: color, intensity, pulse speed, spawn chance, explosion settings
+
 ### Audio
 - Voice sounds for various actions (grab, throw, bounce, idle)
 - Per-action volume controls
@@ -41,8 +49,8 @@ All parameters can be adjusted in real-time via the settings panel (`Q` key):
 |----------|------------|
 | Audio | Master volume, grab/bounce/create/remove/idle volumes, idle frequency |
 | Physics | Gravity, bounce, friction, rotation speed, collision damping, throwing power, window inertia |
-| Speaki | Size, click-to-add toggle, eye blink toggle |
-| Window | Background color, title bar visibility |
+| Speaki | Size, click-to-add toggle, eye blink toggle, shiny settings (bloom, color, glow, pulse, explosion, shockwave) |
+| Window | Background color, title bar visibility, fullscreen toggle |
 | Border | Left/right/up/down margins |
 
 ## Controls
@@ -83,8 +91,8 @@ Press `Q` to open settings. Available options:
 
 - **Audio**: Volume controls for various sounds
 - **Physics**: Gravity, bounce, friction, collision settings, window inertia
-- **Speaki**: Size, click-to-add toggle, eye blink
-- **Window**: Background color, title bar toggle
+- **Speaki**: Size, click-to-add toggle, eye blink, shiny settings (bloom, color, glow, pulse, explosion, shockwave)
+- **Window**: Background color, title bar toggle, fullscreen mode
 - **Border**: Boundary margins
 
 ## Building
