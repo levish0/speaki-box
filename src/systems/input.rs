@@ -199,6 +199,7 @@ pub fn spawn_speaki_system(
     mut events: MessageReader<SpawnSpeakiEvent>,
     config: Res<GameConfig>,
     sprites: Res<SpriteAssets>,
+    shiny_config: Res<ShinyConfig>,
     mut drag_state: ResMut<DragState>,
 ) {
     for event in events.read() {
@@ -208,6 +209,7 @@ pub fn spawn_speaki_system(
             event.velocity,
             config.speaki_size,
             &sprites,
+            &shiny_config,
         );
 
         // If this was from a click, make it dragged
@@ -289,7 +291,11 @@ pub fn spawn_speaki(
     velocity: Vec2,
     size: f32,
     sprites: &SpriteAssets,
+    shiny_config: &ShinyConfig,
 ) -> Entity {
+    // Check if this speaki should be shiny
+    let is_shiny = shiny_config.enabled && rand::random::<f32>() < shiny_config.spawn_chance;
+
     let mut entity_commands = commands.spawn((
         Speaki,
         Velocity::new(velocity.x, velocity.y),
@@ -305,11 +311,33 @@ pub fn spawn_speaki(
 
     // Add sprite if assets are loaded
     if sprites.loaded && !sprites.states.is_empty() {
+        let sprite_color = if is_shiny {
+            // HDR color for bloom effect (values > 1.0 trigger bloom)
+            let [r, g, b] = shiny_config.glow_color;
+            let intensity = shiny_config.glow_intensity;
+            Color::srgb(
+                r * intensity,
+                g * intensity,
+                b * intensity,
+            )
+        } else {
+            Color::WHITE
+        };
+
         entity_commands.insert(Sprite {
             image: sprites.states[0].handle.clone(),
             custom_size: Some(Vec2::splat(size)),
+            color: sprite_color,
             ..default()
         });
+
+        if is_shiny {
+            let [r, g, b] = shiny_config.glow_color;
+            entity_commands.insert(Shiny {
+                base_color: Color::srgb(r, g, b),
+                ..default()
+            });
+        }
     }
 
     entity_commands.id()

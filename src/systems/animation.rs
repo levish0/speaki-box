@@ -109,3 +109,27 @@ pub fn change_to_normal_system(
         }
     }
 }
+
+/// Animate shiny speakis with pulsing glow effect
+pub fn shiny_glow_system(
+    mut query: Query<(&Shiny, &mut Sprite), With<Speaki>>,
+    shiny_config: Res<ShinyConfig>,
+    time: Res<Time>,
+) {
+    let elapsed = time.elapsed_secs();
+
+    for (shiny, mut sprite) in query.iter_mut() {
+        // Calculate pulse factor (oscillates between 0.7 and 1.0)
+        let pulse = ((elapsed * shiny_config.pulse_speed + shiny.pulse_phase).sin() + 1.0) / 2.0;
+        let pulse_factor = 0.7 + pulse * 0.3;
+
+        // Apply HDR color with pulsing intensity (use each shiny's own color)
+        let intensity = shiny_config.glow_intensity * pulse_factor;
+        let base = shiny.base_color.to_srgba();
+        sprite.color = Color::srgb(
+            base.red * intensity,
+            base.green * intensity,
+            base.blue * intensity,
+        );
+    }
+}

@@ -79,6 +79,7 @@ pub fn settings_ui_system(
     mut game_config: ResMut<GameConfig>,
     mut border_config: ResMut<BorderConfig>,
     mut window_tracker: ResMut<WindowPositionTracker>,
+    mut shiny_config: ResMut<ShinyConfig>,
 ) -> Result {
     let ctx = contexts.ctx_mut()?;
 
@@ -188,6 +189,47 @@ pub fn settings_ui_system(
                             );
                             ui.checkbox(&mut game_config.click_to_add, "Click to Add");
                             ui.checkbox(&mut game_config.eye_blink_enabled, "Eye Blink");
+                            ui.separator();
+                            ui.label("Shiny");
+                            ui.checkbox(&mut shiny_config.enabled, "Enabled");
+                            ui.checkbox(&mut shiny_config.bloom_enabled, "Bloom");
+                            ui.add(
+                                egui::Slider::new(&mut shiny_config.spawn_chance, 0.0..=1.0)
+                                    .text("Chance")
+                                    .custom_formatter(|v, _| format!("{:.0}%", v * 100.0)),
+                            );
+                            ui.horizontal(|ui| {
+                                ui.label("Color");
+                                ui.color_edit_button_rgb(&mut shiny_config.glow_color);
+                            });
+                            ui.add(
+                                egui::Slider::new(&mut shiny_config.glow_intensity, 1.0..=10.0)
+                                    .text("Glow"),
+                            );
+                            ui.add(
+                                egui::Slider::new(&mut shiny_config.pulse_speed, 0.0..=5.0)
+                                    .text("Pulse"),
+                            );
+                            ui.separator();
+                            ui.label("Explosion");
+                            ui.checkbox(&mut shiny_config.explosion_enabled, "Enabled");
+                            ui.checkbox(&mut shiny_config.shockwave_enabled, "Shockwave");
+                            ui.add(
+                                egui::Slider::new(&mut shiny_config.explosion_radius, 100.0..=800.0)
+                                    .text("Radius"),
+                            );
+                            ui.add(
+                                egui::Slider::new(&mut shiny_config.explosion_force, 10.0..=150.0)
+                                    .text("Force"),
+                            );
+                            ui.add(
+                                egui::Slider::new(&mut shiny_config.explosion_interval_min, 1.0..=10.0)
+                                    .text("Min Interval"),
+                            );
+                            ui.add(
+                                egui::Slider::new(&mut shiny_config.explosion_interval_max, 2.0..=20.0)
+                                    .text("Max Interval"),
+                            );
                         });
 
                     egui::CollapsingHeader::new("Window")
@@ -219,6 +261,7 @@ pub fn settings_ui_system(
                             );
 
                             ui.checkbox(&mut game_config.window_decorations, "Title Bar");
+                            ui.checkbox(&mut game_config.fullscreen, "Fullscreen");
                         });
 
                     egui::CollapsingHeader::new("Border")
@@ -258,7 +301,42 @@ pub fn sync_background_color_system(
 
 /// Sync window settings from config (only decorations, transparency can't change at runtime)
 pub fn sync_window_settings_system(game_config: Res<GameConfig>, mut windows: Query<&mut Window>) {
+    use bevy::window::WindowMode;
+
     for mut window in windows.iter_mut() {
         window.decorations = game_config.window_decorations;
+
+        let target_mode = if game_config.fullscreen {
+            WindowMode::BorderlessFullscreen(bevy::window::MonitorSelection::Current)
+        } else {
+            WindowMode::Windowed
+        };
+
+        if window.mode != target_mode {
+            window.mode = target_mode;
+        }
+    }
+}
+
+/// Toggle bloom effect based on shiny config
+pub fn sync_bloom_system(
+    mut commands: Commands,
+    shiny_config: Res<ShinyConfig>,
+    camera_query: Query<(Entity, Option<&bevy::post_process::bloom::Bloom>), With<Camera2d>>,
+) {
+    for (entity, bloom) in camera_query.iter() {
+        if shiny_config.bloom_enabled && bloom.is_none() {
+            // Add bloom
+            commands.entity(entity).insert(bevy::post_process::bloom::Bloom {
+                intensity: 0.5,
+                low_frequency_boost: 0.7,
+                low_frequency_boost_curvature: 0.5,
+                high_pass_frequency: 2.0,
+                ..bevy::post_process::bloom::Bloom::OLD_SCHOOL
+            });
+        } else if !shiny_config.bloom_enabled && bloom.is_some() {
+            // Remove bloom
+            commands.entity(entity).remove::<bevy::post_process::bloom::Bloom>();
+        }
     }
 }

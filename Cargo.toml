@@ -1,6 +1,6 @@
 [package]
 name = "speaki-box"
-version = "0.1.11"
+version = "0.2.1"
 edition = "2024"
 authors = ["Levi Lim <shiueo.csh@gmail.com>"]
 repository = "https://github.com/levish0/speaki-box"
@@ -9,8 +9,6 @@ description = "스삐끼 네르지 마세요"
 
 [dependencies]
 bevy = { version = "0.17.3", default-features = false, features = [
-    "android-game-activity",
-    "android_shared_stdcxx",
     "animation",
     "async_executor",
     "bevy_anti_alias",

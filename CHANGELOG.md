@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-01-10
+
+### Added
+- **Shockwave visual effect**: Expanding ring animation when shiny speakis explode
+  - Uses shiny's glow color (HDR)
+  - Configurable toggle in UI (Settings → スピキ → Shockwave)
+- **Fullscreen mode**: Toggle in Settings → Window → Fullscreen
+  - Uses borderless fullscreen mode
+
+## [0.2.0] - 2026-01-10
+
+### Added
+- **Shiny Speaki**: Rare glowing variant with 5% spawn chance
+  - Golden HDR color with bloom effect
+  - Pulsing glow animation
+  - Each shiny has random pulse phase for variety
+  - **Explosion ability**: Shiny speakis periodically push nearby speakis away
+- **Bloom post-processing**: Camera bloom effect for glowing speakis
+- **Shiny settings in UI** (Q key → スピキ section):
+  - Enabled: Toggle shiny speaki spawning
+  - Bloom: Toggle bloom effect on/off
+  - Chance: Adjust spawn probability (0-100%)
+  - Color: Customize glow color (applied to new shinies)
+  - Glow: Adjust glow intensity (1-10)
+  - Pulse: Adjust pulse animation speed (0-5)
+  - Explosion settings:
+    - Enabled: Toggle explosion ability
+    - Radius: Explosion range (100-800)
+    - Force: Push strength (5-50)
+    - Min/Max Interval: Time between explosions (1-20 seconds)
+
+### Fixed
+- Default speaki size now correctly uses 150 (was 200 in GameConfig)
+
 ## [0.1.11] - 2026-01-10
 
 ### Changed

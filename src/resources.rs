@@ -12,19 +12,21 @@ pub struct GameConfig {
     pub background_alpha: f32,
     pub window_transparent: bool,
     pub window_decorations: bool,
+    pub fullscreen: bool,
 }
 
 impl Default for GameConfig {
     fn default() -> Self {
         Self {
             speaki_count: 3,
-            speaki_size: 200.0,
+            speaki_size: 150.0,
             click_to_add: true,
             eye_blink_enabled: true,
             background_color: [0.1, 0.1, 0.1],
             background_alpha: 1.0,
             window_transparent: false,
             window_decorations: true,
+            fullscreen: false,
         }
     }
 }
@@ -208,6 +210,48 @@ impl Default for VoiceGroups {
             remove: vec![15, 16],              // sc2s, sc2e (random)
             idle: vec![5, 6, 7, 8, 9, 10, 11], // g1, g2, g3, gs1, gs2, gs3, gs4
             idle2: vec![12, 14],               // sc1, sc2
+        }
+    }
+}
+
+/// Shiny speaki configuration
+#[derive(Resource)]
+pub struct ShinyConfig {
+    pub enabled: bool,
+    pub spawn_chance: f32,      // 0.0 to 1.0
+    pub glow_color: [f32; 3],   // RGB color (0.0 to 1.0)
+    pub glow_intensity: f32,    // HDR brightness multiplier
+    pub pulse_speed: f32,       // Pulse animation speed
+    pub bloom_enabled: bool,    // Toggle bloom effect
+    // Explosion settings
+    pub explosion_enabled: bool,
+    pub explosion_interval_min: f32, // Minimum time between explosions (seconds)
+    pub explosion_interval_max: f32, // Maximum time between explosions (seconds)
+    pub explosion_radius: f32,       // How far the explosion reaches
+    pub explosion_force: f32,        // How hard speakis get pushed
+    // Shockwave visual settings
+    pub shockwave_enabled: bool,
+    pub shockwave_duration: f32,     // How long the shockwave animation lasts
+}
+
+impl Default for ShinyConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            spawn_chance: 0.05,           // 5% chance
+            glow_color: [1.0, 0.85, 0.3], // Golden color
+            glow_intensity: 3.0,          // HDR brightness
+            pulse_speed: 2.0,             // Pulse cycles per second
+            bloom_enabled: true,          // Bloom effect on/off
+            // Explosion defaults
+            explosion_enabled: true,
+            explosion_interval_min: 3.0,  // Min 3 seconds
+            explosion_interval_max: 8.0,  // Max 8 seconds
+            explosion_radius: 400.0,      // 400 pixels
+            explosion_force: 100.0,       // Push force
+            // Shockwave defaults
+            shockwave_enabled: true,
+            shockwave_duration: 0.4,      // 400ms animation
         }
     }
 }

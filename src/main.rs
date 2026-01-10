@@ -75,6 +75,7 @@ fn main() {
         .init_resource::<ImageGroups>()
         .init_resource::<VoiceGroups>()
         .init_resource::<WindowPositionTracker>()
+        .init_resource::<ShinyConfig>()
         // Events
         .add_message::<SpawnSpeakiEvent>()
         .add_message::<DespawnSpeakiEvent>()
@@ -107,6 +108,8 @@ fn main() {
                 wall_collision_system,
                 rotation_system,
                 window_inertia_system,
+                shiny_explosion_system,
+                shockwave_animation_system,
             )
                 .chain(),
         )
@@ -118,6 +121,7 @@ fn main() {
                 sprite_update_system,
                 change_to_sad_system,
                 change_to_normal_system,
+                shiny_glow_system,
             ),
         )
         // Audio systems
@@ -138,6 +142,7 @@ fn main() {
                 toggle_titlebar_system,
                 sync_background_color_system,
                 sync_window_settings_system,
+                sync_bloom_system,
                 window_drag_system,
             ),
         )
@@ -149,7 +154,16 @@ fn main() {
 }
 
 fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera2d);
+    commands.spawn((
+        Camera2d,
+        bevy::post_process::bloom::Bloom {
+            intensity: 0.5,                // Bloom strength
+            low_frequency_boost: 0.7,      // Makes glow spread wider
+            low_frequency_boost_curvature: 0.5,
+            high_pass_frequency: 2.0,      // Higher = only HDR colors bloom
+            ..bevy::post_process::bloom::Bloom::OLD_SCHOOL
+        },
+    ));
 }
 
 fn set_window_icon(_marker: NonSendMarker) {
@@ -290,6 +304,7 @@ fn spawn_initial_speakis(
     mut commands: Commands,
     config: Res<GameConfig>,
     sprites: Res<SpriteAssets>,
+    shiny_config: Res<ShinyConfig>,
     window: Single<&Window>,
 ) {
     let half_width = window.width() / 2.0;
@@ -310,6 +325,7 @@ fn spawn_initial_speakis(
             Vec2::new(vx, vy),
             config.speaki_size,
             &sprites,
+            &shiny_config,
         );
     }
 }

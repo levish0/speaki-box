@@ -99,3 +99,30 @@ impl Default for SpeakiSize {
 pub struct CurrentAudio {
     pub handle: Option<Handle<AudioInstance>>,
 }
+
+/// Shiny speaki marker - rare glowing variant
+#[derive(Component)]
+pub struct Shiny {
+    pub base_color: Color,
+    pub pulse_phase: f32,        // Random phase offset for each shiny
+    pub next_explosion: f32,     // Time until next explosion (seconds from spawn)
+}
+
+impl Default for Shiny {
+    fn default() -> Self {
+        Self {
+            base_color: Color::srgb(1.0, 0.85, 0.3), // Golden color
+            pulse_phase: rand::random::<f32>() * std::f32::consts::TAU, // Random start phase
+            next_explosion: 3.0 + rand::random::<f32>() * 5.0, // Random initial delay (3-8 seconds)
+        }
+    }
+}
+
+/// Shockwave visual effect - expands and fades out
+#[derive(Component)]
+pub struct Shockwave {
+    pub elapsed: f32,      // Time since spawn
+    pub duration: f32,     // Total animation duration
+    pub max_radius: f32,   // Maximum size to reach
+    pub color: Color,      // Base color
+}
