@@ -117,6 +117,26 @@ pub fn bounce_voice_system(
     }
 }
 
+/// Handle merge events and play sound
+pub fn merge_voice_system(
+    mut merge_events: MessageReader<MergeSpeakiEvent>,
+    mut voice_events: MessageWriter<PlayVoiceEvent>,
+    voice_groups: Res<VoiceGroups>,
+    audio_config: Res<AudioConfig>,
+) {
+    for event in merge_events.read() {
+        // Play create voice for merge (sounds like a new bigger speaki)
+        if !voice_groups.create.is_empty() {
+            let idx = voice_groups.create[rand::rng().random_range(0..voice_groups.create.len())];
+            voice_events.write(PlayVoiceEvent {
+                entity: Some(event.entity1), // Play on the remaining speaki
+                voice_index: idx,
+                volume: audio_config.create_volume,
+            });
+        }
+    }
+}
+
 /// Handle idle voice (random sounds when not interacting)
 pub fn idle_voice_system(
     mut query: Query<

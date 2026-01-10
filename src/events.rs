@@ -26,3 +26,13 @@ pub struct PlayVoiceEvent {
 pub struct WallBounceEvent {
     pub entity: Entity,
 }
+
+/// Event for merging two speakis (Suika game style)
+#[derive(Message)]
+pub struct MergeSpeakiEvent {
+    pub entity1: Entity,
+    pub entity2: Entity,
+    pub position: Vec2,
+    pub combined_velocity: Vec2,
+    pub new_size: f32,
+}

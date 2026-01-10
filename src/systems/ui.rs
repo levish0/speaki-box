@@ -80,6 +80,7 @@ pub fn settings_ui_system(
     mut border_config: ResMut<BorderConfig>,
     mut window_tracker: ResMut<WindowPositionTracker>,
     mut shiny_config: ResMut<ShinyConfig>,
+    mut merge_config: ResMut<MergeConfig>,
 ) -> Result {
     let ctx = contexts.ctx_mut()?;
 
@@ -229,6 +230,26 @@ pub fn settings_ui_system(
                             ui.add(
                                 egui::Slider::new(&mut shiny_config.explosion_interval_max, 2.0..=20.0)
                                     .text("Max Interval"),
+                            );
+                            ui.separator();
+                            ui.label("Merge (Suika)");
+                            ui.checkbox(&mut merge_config.enabled, "Enabled");
+                            ui.add(
+                                egui::Slider::new(&mut merge_config.size_tolerance, 0.0..=0.5)
+                                    .text("Tolerance")
+                                    .custom_formatter(|v, _| format!("{:.0}%", v * 100.0)),
+                            );
+                            ui.add(
+                                egui::Slider::new(&mut merge_config.growth_factor, 1.0..=2.0)
+                                    .text("Growth"),
+                            );
+                            ui.add(
+                                egui::Slider::new(&mut merge_config.max_size, 200.0..=800.0)
+                                    .text("Max Size"),
+                            );
+                            ui.add(
+                                egui::Slider::new(&mut merge_config.merge_impulse, 0.0..=20.0)
+                                    .text("Pop Force"),
                             );
                         });
 

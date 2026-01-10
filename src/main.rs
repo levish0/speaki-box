@@ -76,11 +76,13 @@ fn main() {
         .init_resource::<VoiceGroups>()
         .init_resource::<WindowPositionTracker>()
         .init_resource::<ShinyConfig>()
+        .init_resource::<MergeConfig>()
         // Events
         .add_message::<SpawnSpeakiEvent>()
         .add_message::<DespawnSpeakiEvent>()
         .add_message::<PlayVoiceEvent>()
         .add_message::<WallBounceEvent>()
+        .add_message::<MergeSpeakiEvent>()
         // Startup
         .add_systems(Startup, (setup_camera, load_assets, set_window_icon))
         .add_systems(Startup, spawn_initial_speakis.after(load_assets))
@@ -104,6 +106,7 @@ fn main() {
             (
                 gravity_system,
                 movement_system,
+                speaki_merge_system,  // Must run before collision to detect overlapping speakis
                 speaki_collision_system,
                 wall_collision_system,
                 rotation_system,
@@ -130,6 +133,7 @@ fn main() {
             (
                 play_voice_system,
                 bounce_voice_system,
+                merge_voice_system,
                 idle_voice_system,
                 mouth_animation_system,
             ),

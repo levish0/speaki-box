@@ -37,6 +37,13 @@ A pet 'BOX' featuring Speaki(스피키) characters with physics simulation.
 - **Shockwave Effect**: Visible expanding ring when explosion triggers
 - Customizable: color, intensity, pulse speed, spawn chance, explosion settings
 
+### Merge Mode (Suika Game)
+- **Same-size Merge**: When two speakis of similar size collide, they merge into one
+- **Growth**: Merged speaki grows by √2 (area doubles)
+- **Max Size Limit**: Speakis at max size cannot merge further
+- **Sound Effect**: Plays when merging occurs
+- Disabled by default, toggle in Settings → スピキ → Merge (Suika)
+
 ### Audio
 - Voice sounds for various actions (grab, throw, bounce, idle)
 - Per-action volume controls
@@ -49,7 +56,7 @@ All parameters can be adjusted in real-time via the settings panel (`Q` key):
 |----------|------------|
 | Audio | Master volume, grab/bounce/create/remove/idle volumes, idle frequency |
 | Physics | Gravity, bounce, friction, rotation speed, collision damping, throwing power, window inertia |
-| Speaki | Size, click-to-add toggle, eye blink toggle, shiny settings (bloom, color, glow, pulse, explosion, shockwave) |
+| Speaki | Size, click-to-add toggle, eye blink toggle, shiny settings, merge (Suika) settings |
 | Window | Background color, title bar visibility, fullscreen toggle |
 | Border | Left/right/up/down margins |
 
@@ -91,7 +98,7 @@ Press `Q` to open settings. Available options:
 
 - **Audio**: Volume controls for various sounds
 - **Physics**: Gravity, bounce, friction, collision settings, window inertia
-- **Speaki**: Size, click-to-add toggle, eye blink, shiny settings (bloom, color, glow, pulse, explosion, shockwave)
+- **Speaki**: Size, click-to-add toggle, eye blink, shiny settings, merge (Suika) settings
 - **Window**: Background color, title bar toggle, fullscreen mode
 - **Border**: Boundary margins
 

@@ -255,3 +255,25 @@ impl Default for ShinyConfig {
         }
     }
 }
+
+/// Merge configuration (Suika game style)
+#[derive(Resource)]
+pub struct MergeConfig {
+    pub enabled: bool,
+    pub size_tolerance: f32,    // How close sizes need to be to merge (percentage)
+    pub max_size: f32,          // Maximum size after merging
+    pub growth_factor: f32,     // Size multiplier when merging (sqrt(2) = area doubles)
+    pub merge_impulse: f32,     // Impulse applied when merging
+}
+
+impl Default for MergeConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            size_tolerance: 0.1,              // 10% tolerance
+            max_size: 600.0,                  // Max 800px
+            growth_factor: 1.414,             // sqrt(2) - area doubles
+            merge_impulse: 5.0,               // Small upward impulse
+        }
+    }
+}
