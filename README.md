@@ -52,29 +52,29 @@ A pet 'BOX' featuring Speaki(스피키) characters with physics simulation.
 ### Configurable Settings
 All parameters can be adjusted in real-time via the settings panel (`Q` key):
 
-| Category | Parameters |
-|----------|------------|
-| Audio | Master volume, grab/bounce/create/remove/idle volumes, idle frequency |
-| Physics | Gravity, bounce, friction, rotation speed, collision damping, throwing power, window inertia |
-| Speaki | Size, click-to-add toggle, eye blink toggle, shiny settings, merge (Suika) settings |
-| Window | Background color, title bar visibility, fullscreen toggle |
-| Border | Left/right/up/down margins |
+| Category | Parameters                                                                                   |
+|----------|----------------------------------------------------------------------------------------------|
+| Audio    | Master volume, grab/bounce/create/remove/idle volumes, idle frequency                        |
+| Physics  | Gravity, bounce, friction, rotation speed, collision damping, throwing power, window inertia |
+| Speaki   | Size, click-to-add toggle, eye blink toggle, shiny settings, merge (Suika) settings          |
+| Window   | Background color, title bar visibility, fullscreen toggle                                    |
+| Border   | Left/right/up/down margins                                                                   |
 
 ## Controls
 
 ### Mouse
-| Action | Description |
-|--------|-------------|
+| Action                   | Description       |
+|--------------------------|-------------------|
 | Left Click (empty space) | Create new Speaki |
-| Left Click (on Speaki) | Grab Speaki |
-| Drag + Release | Throw Speaki |
-| Right Click | Delete Speaki |
+| Left Click (on Speaki)   | Grab Speaki       |
+| Drag + Release           | Throw Speaki      |
+| Right Click              | Delete Speaki     |
 
 ### Keyboard
-| Shortcut | Description |
-|----------|-------------|
-| `Q` | Toggle settings window |
-| `Alt + T` | Toggle title bar |
+| Shortcut           | Description                                   |
+|--------------------|-----------------------------------------------|
+| `Q`                | Toggle settings window                        |
+| `Alt + T`          | Toggle title bar                              |
 | `Alt + Left Click` | Drag window (useful when title bar is hidden) |
 
 ## Running

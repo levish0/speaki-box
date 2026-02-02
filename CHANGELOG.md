@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2026-02-02
+
+### Changed
+- **Bevy 0.18 upgrade**: Updated from Bevy 0.17.3 to 0.18.0
+  - Renamed features per Bevy 0.18 migration guide:
+    - `animation` → `gltf_animation`
+    - `bevy_mesh_picking_backend` → `mesh_picking`
+    - `bevy_sprite_picking_backend` → `sprite_picking`
+    - `bevy_ui_picking_backend` → `ui_picking`
+
 ## [0.2.2] - 2026-01-10
 
 ### Added
