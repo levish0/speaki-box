@@ -60,7 +60,7 @@ bevy = { version = "0.18.0", default-features = false, features = [
 ] }
 rand = "0.9.2"
 bevy_kira_audio = { version = "0.25.0", features = ["mp3"] }
-bevy_egui = "0.39.0"
+bevy_egui = "0.39.1"
 bevy_embedded_assets = "0.15.0"
 image = { version = "0.25", default-features = false, features = ["png"] }
 winit = "0.30"
