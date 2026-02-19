@@ -22,5 +22,25 @@
 </head>
 <body>
     <link data-trunk rel="rust" data-wasm-opt="2" data-cargo-no-default-features />
+    <script>
+        (function() {
+            var Orig = window.AudioContext || window.webkitAudioContext;
+            if (!Orig) return;
+            var list = [];
+            window.AudioContext = window.webkitAudioContext = function() {
+                var c = new Orig();
+                list.push(c);
+                return c;
+            };
+            window.AudioContext.prototype = Orig.prototype;
+            function unlock() {
+                list.forEach(function(c) { if (c.state === "suspended") c.resume(); });
+                document.removeEventListener("click", unlock);
+                document.removeEventListener("touchstart", unlock);
+            }
+            document.addEventListener("click", unlock);
+            document.addEventListener("touchstart", unlock);
+        })();
+    </script>
 </body>
 </html>
