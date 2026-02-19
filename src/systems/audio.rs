@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_kira_audio::prelude::*;
-use rand::Rng;
+use rand::RngExt;
 
 use crate::components::*;
 use crate::events::*;

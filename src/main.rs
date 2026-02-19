@@ -6,7 +6,6 @@ mod events;
 mod resources;
 mod systems;
 
-use bevy::ecs::system::NonSendMarker;
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass, input::egui_wants_any_pointer_input};
 use bevy_embedded_assets::{EmbeddedAssetPlugin, PluginMode};
@@ -17,14 +16,20 @@ use resources::*;
 use systems::*;
 
 fn main() {
-    // Check for --transparent flag or SPEAKI_TRANSPARENT env var
-    let args: Vec<String> = std::env::args().collect();
-    let transparent = args.contains(&"--transparent".to_string())
-        || std::env::var("SPEAKI_TRANSPARENT")
-            .map(|v| v == "1" || v.to_lowercase() == "true")
-            .unwrap_or(false);
+    // Check for --transparent flag or SPEAKI_TRANSPARENT env var (native only)
+    #[cfg(not(target_arch = "wasm32"))]
+    let transparent = {
+        let args: Vec<String> = std::env::args().collect();
+        let t = args.contains(&"--transparent".to_string())
+            || std::env::var("SPEAKI_TRANSPARENT")
+                .map(|v| v == "1" || v.to_lowercase() == "true")
+                .unwrap_or(false);
+        println!("Transparent mode: {}", t);
+        t
+    };
 
-    println!("Transparent mode: {}", transparent);
+    #[cfg(target_arch = "wasm32")]
+    let transparent = false;
 
     // Set initial config based on transparent mode
     let mut game_config = GameConfig::default();
@@ -45,8 +50,9 @@ fn main() {
         ))
     };
 
-    App::new()
-        .insert_resource(clear_color)
+    let mut app = App::new();
+
+    app.insert_resource(clear_color)
         .add_plugins(EmbeddedAssetPlugin {
             mode: PluginMode::ReplaceDefault,
         })
@@ -55,7 +61,7 @@ fn main() {
                 title: "Speaki Box".to_string(),
                 resolution: bevy::window::WindowResolution::new(1280, 720),
                 transparent,
-                decorations: !transparent, // Hide title bar when transparent
+                decorations: !transparent,
                 ..default()
             }),
             ..default()
@@ -84,7 +90,7 @@ fn main() {
         .add_message::<WallBounceEvent>()
         .add_message::<MergeSpeakiEvent>()
         // Startup
-        .add_systems(Startup, (setup_camera, load_assets, set_window_icon))
+        .add_systems(Startup, (setup_camera, load_assets))
         .add_systems(Startup, spawn_initial_speakis.after(load_assets))
         // Input systems
         .add_systems(
@@ -147,14 +153,24 @@ fn main() {
                 sync_background_color_system,
                 sync_window_settings_system,
                 sync_bloom_system,
-                window_drag_system,
             ),
-        )
+        );
+
+    // Native-only: window drag with Alt+Click
+    #[cfg(not(target_arch = "wasm32"))]
+    app.add_systems(Update, window_drag_system);
+
+    app
         .add_systems(
             EguiPrimaryContextPass,
             (setup_fonts_system, settings_ui_system).chain(),
-        )
-        .run();
+        );
+
+    // Native-only: set window icon
+    #[cfg(not(target_arch = "wasm32"))]
+    app.add_systems(Startup, set_window_icon);
+
+    app.run();
 }
 
 fn setup_camera(mut commands: Commands) {
@@ -170,7 +186,8 @@ fn setup_camera(mut commands: Commands) {
     ));
 }
 
-fn set_window_icon(_marker: NonSendMarker) {
+#[cfg(not(target_arch = "wasm32"))]
+fn set_window_icon(_marker: bevy::ecs::system::NonSendMarker) {
     // Embed logo at compile time
     let icon_bytes = include_bytes!("../assets/logo.png");
 

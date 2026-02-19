@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use rand::Rng;
+use rand::RngExt;
 
 use crate::components::*;
 use crate::events::*;
