@@ -62,6 +62,7 @@ fn main() {
                 resolution: bevy::window::WindowResolution::new(1280, 720),
                 transparent,
                 decorations: !transparent,
+                fit_canvas_to_parent: true,
                 ..default()
             }),
             ..default()
