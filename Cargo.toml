@@ -68,6 +68,10 @@ bevy_kira_audio = { version = "0.25.0", features = ["mp3"] }
 bevy_egui = "0.39.1"
 bevy_embedded_assets = "0.15.0"
 
+# WASM: getrandom needs wasm_js feature for browser RNG
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }
+
 # Native-only dependencies (icon setting)
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 image = { version = "0.25", default-features = false, features = ["png"] }
