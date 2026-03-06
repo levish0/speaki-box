@@ -18,7 +18,7 @@ native = [
 ]
 
 [dependencies]
-bevy = { version = "0.18.0", default-features = false, features = [
+bevy = { version = "0.18.1", default-features = false, features = [
     "gltf_animation",
     "async_executor",
     "bevy_anti_alias",
