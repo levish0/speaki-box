@@ -18,7 +18,7 @@ native = [
 ]
 
 [dependencies]
-bevy = { version = "0.18.0", default-features = false, features = [
+bevy = { version = "0.18.1", default-features = false, features = [
     "gltf_animation",
     "async_executor",
     "bevy_anti_alias",
@@ -63,7 +63,7 @@ bevy = { version = "0.18.0", default-features = false, features = [
     "webgl2",
     "zstd_rust",
 ] }
-rand = "0.10.0"
+rand = "0.10.1"
 bevy_kira_audio = { version = "0.25.0", features = ["mp3"] }
 bevy_egui = "0.39.1"
 bevy_embedded_assets = "0.15.0"
