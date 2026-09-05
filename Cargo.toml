@@ -66,7 +66,7 @@ bevy = { version = "0.18.1", default-features = false, features = [
 rand = "0.10.1"
 bevy_kira_audio = { version = "0.25.0", features = ["mp3"] }
 bevy_egui = "0.39.1"
-bevy_embedded_assets = "0.15.0"
+bevy_embedded_assets = "0.16.0"
 
 # WASM: getrandom needs wasm_js feature for browser RNG
 [target.'cfg(target_arch = "wasm32")'.dependencies]
