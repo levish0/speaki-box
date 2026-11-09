@@ -33,6 +33,10 @@ Each `Update` runs these system sets in order:
 
 The 60 Hz `FixedUpdate` runs gravity, movement, merge, pair collision, wall collision, and rotation in order.
 Bevy runs fixed updates independently of the display frame rate.
+The virtual clock caps each frame at 50 ms. A long GPU or startup stall cannot trigger fifteen physics steps in one visible frame.
+Pointer sampling uses `Time<Real>`. Simulation, blink, and effect timers use the virtual clock.
+Window inertia uses the final primary-window position from each event batch and converts physical pixels to logical pixels.
+The first batch sets the anchor without applying an impulse.
 The egui primary context pass owns font setup and the settings panel.
 The renderer runs the egui 2D pass after `Core2dSystems::PostProcess` and before upscaling.
 Post-processing swaps the current view texture. Egui must draw into the final texture.

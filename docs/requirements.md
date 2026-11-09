@@ -25,7 +25,11 @@ Either Alt key with the left mouse button moves the native window.
 Either Alt key with `T` toggles the title bar. `Q` toggles settings.
 
 Gravity, movement, collisions, merge, and rotation run at 60 simulation ticks per second.
-Display refresh rate must not change simulation speed.
+Display refresh rate must not change simulation speed while frames stay within the 50 ms budget.
+After a long frame, the simulation advances by at most 50 ms. It discards additional elapsed time.
+If the frame rate stays below 20 fps, virtual gameplay time slows instead of jumping forward.
+Pointer throw sampling uses real time so a render stall cannot amplify the throw.
+The first batch of native window positions establishes the inertia anchor and does not push speakis.
 Held speakis follow the cursor. Collisions and walls must not displace them.
 Merge mode combines nearby speakis of similar size. It preserves a shiny participant and places the result at the midpoint.
 

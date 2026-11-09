@@ -155,6 +155,7 @@ pub fn rotation_system(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::app::MAX_SIMULATION_FRAME_DELTA;
     use bevy::time::TimeUpdateStrategy;
     use std::time::Duration;
 
@@ -162,6 +163,7 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .insert_resource(Time::<Fixed>::from_hz(60.0))
+            .insert_resource(Time::<Virtual>::from_max_delta(MAX_SIMULATION_FRAME_DELTA))
             .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_millis(
                 frame_millis,
             )))
@@ -184,5 +186,28 @@ mod tests {
         let at_100_fps = simulate(10);
         assert!(at_50_fps.y < -1000.0);
         assert_eq!(at_50_fps, at_100_fps);
+    }
+
+    #[test]
+    fn long_render_stall_does_not_advance_fifteen_physics_ticks_at_once() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .insert_resource(Time::<Fixed>::from_hz(60.0))
+            .insert_resource(Time::<Virtual>::from_max_delta(MAX_SIMULATION_FRAME_DELTA))
+            .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_secs(1)))
+            .init_resource::<PhysicsConfig>()
+            .add_systems(FixedUpdate, (gravity_system, movement_system).chain());
+        let entity = app
+            .world_mut()
+            .spawn((Speaki, Velocity::new(10.0, 0.0), Transform::default()))
+            .id();
+        app.update();
+        app.update();
+        let position = app.world().get::<Transform>(entity).unwrap().translation;
+        assert!(position.x > 0.0);
+        assert!(
+            position.x <= 30.0,
+            "a stalled frame advanced too far: {position:?}"
+        );
     }
 }

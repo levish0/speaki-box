@@ -28,7 +28,7 @@ pub fn spawn_speaki_system(
     sprites: Res<SpriteAssets>,
     shiny_config: Res<ShinyConfig>,
     mut drag_state: ResMut<DragState>,
-    time: Res<Time>,
+    time: Res<Time<Real>>,
     voice_groups: Res<VoiceGroups>,
     audio_config: Res<AudioConfig>,
     mut voices: MessageWriter<PlayVoice>,

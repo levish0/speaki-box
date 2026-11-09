@@ -12,7 +12,7 @@
 `just verify` passed formatting, native Clippy with warnings denied, ten behavior tests, and the WASM compile check.
 `just build` passed.
 The later native GPU checks added a validation example and corrected the 2D UI render order.
-The complete check suite must run again before the final handoff.
+After the motion guards, `just fmt verify build` passed with thirteen behavior tests and no Clippy or WASM warnings.
 
 ## Desktop transparency
 
@@ -39,6 +39,12 @@ The native trace recorded long startup frames followed by multiple fixed simulat
 One DX12 run recorded a 0.3246-second frame and a maximum per-frame position change of 139.65 pixels.
 That test disabled shiny spawning and pointer interaction.
 The UI render-order fix is verified. The reported motion problem requires a separate change and acceptance check.
+
+The follow-up change caps virtual frame time at 50 ms and samples pointer motion with the real clock.
+It also treats the first batch of native positions as an anchor and converts later position deltas to logical pixels.
+Regression tests cover a one-second render stall, startup position bursts, and inertia re-enabling.
+These guards address recorded long-frame catch-up and a reproducible startup event case.
+They do not establish that every reported transparent-window jump has the same cause.
 
 ## Remaining checks
 

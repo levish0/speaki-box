@@ -46,26 +46,27 @@ pub fn window_inertia_system(
     mut moved_events: MessageReader<WindowMoved>,
     mut tracker: ResMut<WindowPositionTracker>,
     mut speaki_query: Query<&mut Velocity, (With<Speaki>, Without<Dragged>)>,
+    window: Single<(Entity, &Window), With<PrimaryWindow>>,
 ) {
-    for event in moved_events.read() {
-        let current_pos = event.position;
-
-        if let Some(last_pos) = tracker.last_position.filter(|_| tracker.enabled) {
-            let delta_x = (current_pos.x - last_pos.x) as f32;
-            let delta_y = (current_pos.y - last_pos.y) as f32;
-
-            // Only apply if there's significant movement
-            if delta_x.abs() > 0.5 || delta_y.abs() > 0.5 {
-                let strength = tracker.strength;
-                for mut vel in speaki_query.iter_mut() {
-                    // Apply opposite impulse (inertia effect)
-                    vel.x -= delta_x * strength;
-                    vel.y += delta_y * strength; // Y is inverted (screen vs bevy coords)
-                }
-            }
-        }
-
-        tracker.last_position = Some(current_pos);
+    let Some(current_pos) = moved_events
+        .read()
+        .filter(|event| event.window == window.0)
+        .map(|event| event.position)
+        .last()
+    else {
+        return;
+    };
+    // Native creation can report several positions before the first frame. Only establish an anchor.
+    let Some(last_pos) = tracker.last_position.replace(current_pos) else {
+        return;
+    };
+    if !tracker.enabled {
+        return;
+    }
+    let delta = (current_pos - last_pos).as_vec2() / window.1.scale_factor();
+    for mut velocity in &mut speaki_query {
+        velocity.x -= delta.x * tracker.strength;
+        velocity.y += delta.y * tracker.strength;
     }
 }
 
@@ -82,5 +83,67 @@ pub fn window_drag_system(
         for mut window in windows.iter_mut() {
             window.start_drag_move();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn app_with_window() -> (App, Entity, Entity) {
+        let mut app = App::new();
+        app.add_message::<WindowMoved>()
+            .init_resource::<WindowPositionTracker>()
+            .add_systems(Update, window_inertia_system);
+        let window = app
+            .world_mut()
+            .spawn((Window::default(), PrimaryWindow))
+            .id();
+        let speaki = app.world_mut().spawn((Speaki, Velocity::default())).id();
+        (app, window, speaki)
+    }
+
+    fn move_window(app: &mut App, window: Entity, position: IVec2) {
+        app.world_mut()
+            .write_message(WindowMoved { window, position });
+    }
+
+    #[test]
+    fn startup_position_burst_does_not_throw_speakis() {
+        let (mut app, window, speaki) = app_with_window();
+        move_window(&mut app, window, IVec2::ZERO);
+        move_window(&mut app, window, IVec2::new(2000, 1000));
+        app.update();
+        assert_eq!(
+            app.world().get::<Velocity>(speaki).unwrap().speed_squared(),
+            0.0
+        );
+        assert_eq!(
+            app.world()
+                .resource::<WindowPositionTracker>()
+                .last_position,
+            Some(IVec2::new(2000, 1000))
+        );
+        move_window(&mut app, window, IVec2::new(2100, 1000));
+        app.update();
+        assert_eq!(app.world().get::<Velocity>(speaki).unwrap().x, -10.0);
+    }
+
+    #[test]
+    fn disabled_inertia_keeps_its_anchor_current() {
+        let (mut app, window, speaki) = app_with_window();
+        app.world_mut()
+            .resource_mut::<WindowPositionTracker>()
+            .enabled = false;
+        move_window(&mut app, window, IVec2::ZERO);
+        app.update();
+        move_window(&mut app, window, IVec2::new(2000, 1000));
+        app.update();
+        app.world_mut()
+            .resource_mut::<WindowPositionTracker>()
+            .enabled = true;
+        move_window(&mut app, window, IVec2::new(2010, 1000));
+        app.update();
+        assert_eq!(app.world().get::<Velocity>(speaki).unwrap().x, -1.0);
     }
 }

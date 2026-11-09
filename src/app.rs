@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use std::time::Duration;
 
 use crate::assets::EmbeddedGameAssetsPlugin;
 use crate::audio::plugin::VoicePlaybackPlugin;
@@ -8,6 +9,8 @@ use crate::settings::plugin::SettingsPlugin;
 use crate::speaki::plugin::SpeakiPlugin;
 use crate::window::config::WindowConfig;
 use crate::window::plugin::{DesktopWindowPlugin, window_plugin};
+
+pub(crate) const MAX_SIMULATION_FRAME_DELTA: Duration = Duration::from_millis(50);
 
 pub(crate) fn build_app(window_config: WindowConfig) -> App {
     let primary_window = window_plugin(&window_config);
@@ -29,6 +32,7 @@ pub(crate) fn build_app(window_config: WindowConfig) -> App {
                 .chain(),
         )
         .insert_resource(Time::<Fixed>::from_hz(60.0))
+        .insert_resource(Time::<Virtual>::from_max_delta(MAX_SIMULATION_FRAME_DELTA))
         .insert_resource(ClearColor(window_config.clear_color()))
         .insert_resource(window_config)
         .add_plugins(EmbeddedGameAssetsPlugin)

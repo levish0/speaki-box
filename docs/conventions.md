@@ -15,6 +15,7 @@ Document the reason for unsafe code and keep its scope small.
 
 Use `FixedUpdate` for the 60 Hz simulation. Velocity values are pixels per simulation tick.
 Use `Update` for pointer sampling, window events, audio requests, and visual effects.
+Cap virtual frame time at 50 ms. Use real time for pointer velocity samples.
 Declare an order between producers and consumers. Do not rely on plugin insertion order.
 
 ## Technical writing

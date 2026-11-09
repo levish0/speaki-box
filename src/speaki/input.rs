@@ -89,7 +89,7 @@ pub fn mouse_input_system(
     speakis: Query<(Entity, &Transform, &SpeakiSize), With<Speaki>>,
     mut drag: ResMut<DragState>,
     config: Res<SpeakiConfig>,
-    time: Res<Time>,
+    time: Res<Time<Real>>,
     mut spawn: MessageWriter<SpawnSpeaki>,
     mut voices: MessageWriter<PlayVoice>,
     voice_groups: Res<VoiceGroups>,
@@ -138,7 +138,7 @@ pub fn drag_update_system(
     cameras: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
     mut speakis: Query<(&mut Transform, &mut Velocity), With<Dragged>>,
     mut drag: ResMut<DragState>,
-    time: Res<Time>,
+    time: Res<Time<Real>>,
 ) {
     let Some(entity) = drag.entity else {
         return;
@@ -165,13 +165,14 @@ pub fn drag_release_system(
     mut drag: ResMut<DragState>,
     physics: Res<PhysicsConfig>,
     time: Res<Time>,
+    real_time: Res<Time<Real>>,
 ) {
     let focused = windows.single().is_ok_and(|window| window.focused);
     if mouse.pressed(MouseButton::Left) && focused {
         return;
     }
     let throw = if focused {
-        drag.throw_velocity(time.elapsed_secs_f64()) * physics.cursor_throwing_power
+        drag.throw_velocity(real_time.elapsed_secs_f64()) * physics.cursor_throwing_power
     } else {
         Vec2::ZERO
     };
@@ -226,6 +227,7 @@ mod tests {
             .init_resource::<DragState>()
             .init_resource::<PhysicsConfig>()
             .init_resource::<Time>()
+            .init_resource::<Time<Real>>()
             .add_systems(Update, drag_release_system);
         let entity = app
             .world_mut()
@@ -244,6 +246,7 @@ mod tests {
             .init_resource::<DragState>()
             .init_resource::<PhysicsConfig>()
             .init_resource::<Time>()
+            .init_resource::<Time<Real>>()
             .add_systems(Update, drag_release_system);
         app.world_mut()
             .resource_mut::<ButtonInput<MouseButton>>()
