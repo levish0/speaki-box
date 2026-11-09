@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-09
+
 ### Changed
 - Upgrade Bevy to 0.20.1, bevy_egui to 0.43.1, bevy_kira_audio to 0.27.1, and bevy_embedded_assets to 0.17.0.
 - Update the remaining direct crates and the locked dependency graph. Require Rust 1.97.1 or newer.
