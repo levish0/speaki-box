@@ -5,7 +5,7 @@
 The Windows transparent background works. The user independently confirmed desktop transparency.
 The settings panel renders after 2D post-processing. The user confirmed that Q opens it.
 The DX12 sprite visibility defect is reproduced and corrected in the native GPU check.
-A final interactive build is running for the user's creation and animation check.
+The user confirmed that the final interactive build renders newly created speakis normally and no longer shows intermittent disappearance.
 
 ## Environment
 
