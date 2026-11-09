@@ -54,6 +54,14 @@ smoke-window:
 smoke-transparent:
     cargo run --locked --example window_smoke -- --transparent
 
+# Check 32 GPU frames with three fixed sprite expressions.
+smoke-stationary:
+    cargo run --locked --example window_smoke -- --transparent --stationary
+
+# Observe direct presentation for 60 seconds. Optional flags: --no-msaa and --ldr.
+probe-renderer *arguments:
+    cargo run --locked --example window_smoke -- --transparent --stationary-live {{arguments}}
+
 # Build the GitHub Pages site. Install Trunk first.
 build-web:
     trunk build --release --public-url "/speaki-box/"

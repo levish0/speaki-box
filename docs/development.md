@@ -21,6 +21,8 @@ Install [Trunk](https://trunkrs.dev/) only when you need to run or package the b
 | `just transparent` | Open the transparent native window. |
 | `just smoke-window` | Inject the Q shortcut and save the ordinary window's GPU output. |
 | `just smoke-transparent` | Inject the Q shortcut and save the transparent window's GPU output. |
+| `just smoke-stationary` | Count each fixed sprite's pixels in 32 GPU captures. |
+| `just probe-renderer` | Show three fixed expressions through the ordinary presentation path for 60 seconds. |
 | `just web` | Serve the browser app locally. |
 | `just build-web` | Build the GitHub Pages files in `dist`. |
 
@@ -51,3 +53,9 @@ It disables shiny spawning and idle audio to keep the check focused.
 The example saves the final GPU image to `target/window-smoke/opaque.png` or `target/window-smoke/transparent.png` and closes its own window.
 Inspect the image for the Settings panel. Compare the log with the image when a shortcut changes state without producing visible UI.
 This check does not exercise operating-system keyboard delivery or prove desktop composition.
+
+Use `just smoke-stationary` to compare three different sprite expressions over 32 captured frames.
+The check fails if a sprite region loses its bright opaque pixels. It saves the first frame and each failed frame.
+Bevy captures through an intermediate texture and copies that texture to the window. This extra copy can mask a direct presentation problem.
+Use `just probe-renderer` to inspect the same fixed scene without GPU capture.
+Use `just probe-renderer --no-msaa` to compare single-sample rendering, or `just probe-renderer --ldr` to remove HDR post-processing.

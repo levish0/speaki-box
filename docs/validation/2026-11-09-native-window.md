@@ -46,6 +46,15 @@ Regression tests cover a one-second render stall, startup position bursts, and i
 These guards address recorded long-frame catch-up and a reproducible startup event case.
 They do not establish that every reported transparent-window jump has the same cause.
 
+The user then confirmed that Q worked but described intermittent invisible sprites, including newly created speakis with audible creation voices.
+The user reported that disabling Bloom did not remove this symptom.
+This is an unresolved render visibility problem. The earlier time and startup guards did not resolve it.
+
+A fixed-scene DX12 test captured 32 frames with no CPU movement and no missing sprite region.
+All frames contained the same per-sprite bright opaque pixel counts: 31,822, 32,022, and 31,947.
+That first fixed scene used one expression for all three speakis. Later probes use three different expressions.
+Bevy captures through a temporary render target before copying to the real back buffer. These captures do not prove that the uncaptured presentation path is stable.
+
 ## Remaining checks
 
 Background alpha values between 0 and 1 need desktop composition checks.
