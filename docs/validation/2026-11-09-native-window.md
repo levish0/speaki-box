@@ -1,24 +1,24 @@
 # Native window validation — 2026-11-09
 
+## Result
+
+The Windows transparent background works. The user independently confirmed desktop transparency.
+The settings panel renders after 2D post-processing. The user confirmed that Q opens it.
+The DX12 sprite visibility defect is reproduced and corrected in the native GPU check.
+A final interactive build is running for the user's creation and animation check.
+
 ## Environment
 
 - Windows 11 Pro, kernel 26200.
 - NVIDIA GeForce RTX 4060 Laptop GPU, driver 591.74.
-- Rust 1.99.1. Bevy 0.20.1. wgpu 30.0.1. bevy_egui 0.43.1.
+- Rust 1.99.1. Bevy 0.20.1. wgpu 30.0.1. Naga 30.0.1. bevy_egui 0.43.1.
 - Native debug build. The ordinary window used Vulkan. The transparent window used DX12.
 
 ## Automated checks
 
-`just verify` passed formatting, native Clippy with warnings denied, ten behavior tests, and the WASM compile check.
-`just build` passed.
-The later native GPU checks added a validation example and corrected the 2D UI render order.
-After the motion guards, `just fmt verify build` passed with thirteen behavior tests and no Clippy or WASM warnings.
-
-## Desktop transparency
-
-The native transparent window showed the Zed editor and desktop through the empty background.
-The user independently confirmed that transparency worked.
-The user stopped Computer Use with Escape. No further Computer Use actions ran.
+`just verify` passed formatting, native Clippy with warnings denied, sixteen behavior and shader tests, and the WASM compile check.
+`cargo build --locked --bin speaki-box --example window_smoke` passed.
+The tests include drag cleanup, fixed-step timing, long-frame catch-up, merge state, rotated bounds, startup inertia, the registered Bevy shader, and Naga HLSL output.
 
 ## Settings panel regression
 
@@ -28,36 +28,49 @@ Before the render-order fix, `SettingsOpen` was true and egui produced four pain
 After the fix, the panel appeared in both modes. Each capture contained 5,605 bright UI pixels in the panel region.
 The fix orders the egui pass after `Core2dSystems::PostProcess` and before upscaling.
 
-Images are generated under `target/window-smoke/`. Use `just smoke-window` and `just smoke-transparent` to repeat the check.
-This test exercises Bevy input processing and GPU rendering. It does not inject operating-system keyboard input.
+## DX12 sprite visibility regression
 
-## Motion report under investigation
+The user reported that newly created speakis could be invisible while their creation voices played.
+The user also saw sprites disappear, reappear, and appear at incorrect positions in transparent mode.
+Disabling Bloom did not remove the defect.
 
-The user reported large position jumps in transparent mode while the window was stationary.
-The user first reported that restarting removed the symptom, then confirmed that it occurred in transparent mode.
-The native trace recorded long startup frames followed by multiple fixed simulation steps.
-One DX12 run recorded a 0.3246-second frame and a maximum per-frame position change of 139.65 pixels.
-That test disabled shiny spawning and pointer interaction.
-The UI render-order fix is verified. The reported motion problem requires a separate change and acceptance check.
+A fixed scene with one expression for all three sprites produced 32 stable frames.
+A stronger scene used sprite states 0, 10, and 12 at three fixed, separate positions.
+Before the shader correction, all 32 frames missed the middle sprite. The pixel counts were `[31707, 0, 31925]`.
+The right sprite displayed the middle sprite's expression. CPU positions did not move.
+Disabling texture binding arrays or automatic batching did not correct the scene. Those changes were removed.
 
-The follow-up change caps virtual frame time at 50 ms and samples pointer motion with the real clock.
-It also treats the first batch of native positions as an anchor and converts later position deltas to logical pixels.
-Regression tests cover a one-second render stall, startup position bursts, and inertia re-enabling.
-These guards address recorded long-frame catch-up and a reproducible startup event case.
-They do not establish that every reported transparent-window jump has the same cause.
+A standalone reproduction used the same Naga 30.0.1 library as the app.
+For `let instance_index = vertex.instance_index;`, Naga's HLSL writer added `first_instance` when it declared the local and again when it read the cached named expression.
+For a function-local `var`, the writer added the offset once.
+The app corrects this one token in the registered Bevy sprite shader before the renderer loads it.
+The compiler regression test verifies that the HLSL output contains one offset addition.
 
-The user then confirmed that Q worked but described intermittent invisible sprites, including newly created speakis with audible creation voices.
-The user reported that disabling Bloom did not remove this symptom.
-This is an unresolved render visibility problem. The earlier time and startup guards did not resolve it.
+After the correction, all 32 frames contained all three sprites at the correct locations and with the correct expressions.
+Every frame produced pixel counts `[31831, 32177, 32026]`, 5,605 UI pixels, and zero CPU position change.
+The native smoke test exited successfully.
+The normal sprite material, automatic batching, MSAA, HDR, and Bloom remain enabled.
 
-A fixed-scene DX12 test captured 32 frames with no CPU movement and no missing sprite region.
-All frames contained the same per-sprite bright opaque pixel counts: 31,822, 32,022, and 31,947.
-That first fixed scene used one expression for all three speakis. Later probes use three different expressions.
-Bevy captures through a temporary render target before copying to the real back buffer. These captures do not prove that the uncaptured presentation path is stable.
+Images and logs are generated under `target/window-smoke/`.
+Use `just smoke-stationary` to repeat the three-expression test.
+Bevy captures through an intermediate texture before copying to the real back buffer. Capture alone does not prove desktop composition.
+Here, the incorrect sprite output was present in that capture before the shader change and absent after it.
 
-## Remaining checks
+## Motion and boundary guards
 
-Background alpha values between 0 and 1 need desktop composition checks.
+An earlier native trace recorded a 0.3246-second startup frame and a maximum position change of 139.65 pixels.
+The app now caps virtual frame time at 50 ms and samples pointer motion with the real clock.
+The first batch of native window positions establishes the inertia anchor without applying an impulse.
+These guards did not fix the sprite visibility defect; the HLSL correction fixes that defect.
+
+Wall collision now uses the full rotated sprite bounds after rotation.
+A regression test checks all four corners of a rotated sprite against the window edges.
+
+## Scope
+
+The user stopped Computer Use with Escape. No later Computer Use actions ran.
+Subsequent GPU checks used the app's own validation example and did not inject operating-system input.
+Background alpha values between 0 and 1 still need desktop composition checks.
 macOS, Linux, and browser UI behavior were not tested on this Windows machine.
-The audio decoder logged metadata skip warnings. One earlier interactive run also logged `SoundLimitReached` after repeated activity.
+The audio decoder logged metadata skip warnings. One earlier interactive run logged `SoundLimitReached` after repeated activity.
 Remote CI, publication, and deployment were not run.

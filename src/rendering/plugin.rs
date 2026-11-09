@@ -21,6 +21,8 @@ pub struct RenderingPlugin;
 
 impl Plugin for RenderingPlugin {
     fn build(&self, app: &mut App) {
+        #[cfg(windows)]
+        super::sprite_shader::install_dx12_sprite_shader(app);
         app.add_systems(Startup, setup_camera).add_systems(
             Update,
             (sync_background_color_system, sync_bloom_system).in_set(UpdateSet::Presentation),

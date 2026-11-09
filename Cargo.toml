@@ -60,6 +60,10 @@ winit = "0.30.13"
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1.12"
 
+[dev-dependencies]
+# Match wgpu's compiler to verify the DX12 instance-index regression.
+naga = { version = "30.0.1", features = ["wgsl-in", "hlsl-out"] }
+
 # Bevy systems keep injected resources and query filters explicit in their signatures.
 [lints.clippy]
 too_many_arguments = "allow"

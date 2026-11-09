@@ -5110,6 +5110,7 @@ dependencies = [
  "bevy_kira_audio",
  "getrandom 0.4.3",
  "image",
+ "naga",
  "rand",
  "winit",
  "winres",

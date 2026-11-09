@@ -51,6 +51,13 @@ The rendering module selects DX12 for transparent mode. The window module select
 The clear color premultiplies linear RGB by background alpha. At alpha 0, RGB is also 0.
 Bloom and tone mapping preserve alpha in the selected Bevy release.
 
+On Windows, `rendering/sprite_shader.rs` corrects the embedded Bevy 0.20.1 sprite vertex shader before `RenderStartup` loads it.
+Naga 30.0.1 adds `first_instance` twice when an input builtin is stored in a named `let` expression and then read again.
+The shader uses a function-local `var` for `instance_index`. The HLSL writer then applies the offset once.
+This preserves the standard sprite materials, batching, MSAA, HDR, and bloom behavior.
+The unit tests check the registered shader and compile the index expression through the same Naga HLSL backend used by wgpu.
+When Bevy or Naga changes, revalidate this correction. A changed upstream shader fails the registration test with an explicit message.
+
 macOS uses `PostMultiplied`. Other native platforms use `PreMultiplied`.
 These platform choices require native validation on each target system.
 

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Use DX12, DirectComposition Visual presentation, and premultiplied alpha for Windows transparent mode.
+- Correct Naga's double application of the draw instance offset in the DX12 sprite shader. This fixes missing sprites and incorrect sprite positions when different expressions use separate draws.
 - Draw the settings panel after 2D post-processing so tone mapping cannot hide its output.
 - Bound simulation catch-up after long frames. Ignore native startup position bursts when applying window inertia.
 - Keep rotated sprite corners inside the window during wall collision.
