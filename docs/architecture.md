@@ -31,7 +31,8 @@ Each `Update` runs these system sets in order:
 7. Expression, blink, glow, and sprite synchronization.
 8. Window and camera settings synchronization.
 
-The 60 Hz `FixedUpdate` runs gravity, movement, merge, pair collision, wall collision, and rotation in order.
+The 60 Hz `FixedUpdate` runs gravity, movement, merge, pair collision, rotation, and wall collision in order.
+Wall collision uses the rotated sprite's full extents after rotation. This keeps the visible corners inside the window when the sprite fits.
 Bevy runs fixed updates independently of the display frame rate.
 The virtual clock caps each frame at 50 ms. A long GPU or startup stall cannot trigger fifteen physics steps in one visible frame.
 Pointer sampling uses `Time<Real>`. Simulation, blink, and effect timers use the virtual clock.

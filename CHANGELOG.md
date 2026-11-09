@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use DX12, DirectComposition Visual presentation, and premultiplied alpha for Windows transparent mode.
 - Draw the settings panel after 2D post-processing so tone mapping cannot hide its output.
 - Bound simulation catch-up after long frames. Ignore native startup position bursts when applying window inertia.
+- Keep rotated sprite corners inside the window during wall collision.
 - Enable background opacity controls in transparent mode. Clear fully transparent pixels without residual RGB.
 - Release dragged speakis over settings, outside the window, and after focus loss.
 - Keep held speakis anchored during collisions. Resolve coincident collision pairs.

@@ -54,13 +54,18 @@ pub fn wall_collision_system(
     let bounce_threshold = 1000.0 * physics.bounce_responsiveness;
 
     for (mut transform, mut vel, mut rot, size, entity) in query.iter_mut() {
-        let half_size = size.0 / 2.0;
+        let x_axis = transform.rotation * Vec3::X * transform.scale.x;
+        let y_axis = transform.rotation * Vec3::Y * transform.scale.y;
+        let half_extent = Vec2::new(
+            x_axis.x.abs() + y_axis.x.abs(),
+            x_axis.y.abs() + y_axis.y.abs(),
+        ) * (size.0 * 0.5);
         // A window can shrink below a speaki's diameter. Center that axis and stop it.
-        if right_bound - left_bound <= size.0 {
+        if right_bound - left_bound <= half_extent.x * 2.0 {
             transform.translation.x = (left_bound + right_bound) * 0.5;
             vel.x = 0.0;
         }
-        if top_bound - bottom_bound <= size.0 {
+        if top_bound - bottom_bound <= half_extent.y * 2.0 {
             transform.translation.y = (bottom_bound + top_bound) * 0.5;
             vel.y = 0.0;
         }
@@ -68,8 +73,10 @@ pub fn wall_collision_system(
         let should_update_rotation = rot.speed.abs() < 0.01 && vel_sq > 100.0;
 
         // Bottom collision
-        if top_bound - bottom_bound > size.0 && transform.translation.y - half_size < bottom_bound {
-            transform.translation.y = bottom_bound + half_size;
+        if top_bound - bottom_bound > half_extent.y * 2.0
+            && transform.translation.y - half_extent.y < bottom_bound
+        {
+            transform.translation.y = bottom_bound + half_extent.y;
             vel.y *= -physics.bounce;
             vel.x *= physics.friction;
             rot.speed *= physics.friction;
@@ -88,8 +95,10 @@ pub fn wall_collision_system(
         }
 
         // Top collision
-        if top_bound - bottom_bound > size.0 && transform.translation.y + half_size > top_bound {
-            transform.translation.y = top_bound - half_size;
+        if top_bound - bottom_bound > half_extent.y * 2.0
+            && transform.translation.y + half_extent.y > top_bound
+        {
+            transform.translation.y = top_bound - half_extent.y;
             vel.y *= -physics.bounce;
             vel.x *= physics.friction;
             rot.speed *= physics.friction;
@@ -104,8 +113,10 @@ pub fn wall_collision_system(
         }
 
         // Left collision
-        if right_bound - left_bound > size.0 && transform.translation.x - half_size < left_bound {
-            transform.translation.x = left_bound + half_size;
+        if right_bound - left_bound > half_extent.x * 2.0
+            && transform.translation.x - half_extent.x < left_bound
+        {
+            transform.translation.x = left_bound + half_extent.x;
             vel.x *= -physics.bounce;
             vel.y *= physics.friction;
             rot.speed *= physics.friction;
@@ -124,8 +135,10 @@ pub fn wall_collision_system(
         }
 
         // Right collision
-        if right_bound - left_bound > size.0 && transform.translation.x + half_size > right_bound {
-            transform.translation.x = right_bound - half_size;
+        if right_bound - left_bound > half_extent.x * 2.0
+            && transform.translation.x + half_extent.x > right_bound
+        {
+            transform.translation.x = right_bound - half_extent.x;
             vel.x *= -physics.bounce;
             vel.y *= physics.friction;
             rot.speed *= physics.friction;
@@ -186,6 +199,41 @@ mod tests {
         let at_100_fps = simulate(10);
         assert!(at_50_fps.y < -1000.0);
         assert_eq!(at_50_fps, at_100_fps);
+    }
+
+    #[test]
+    fn rotated_sprite_corners_stay_inside_the_window() {
+        let mut app = App::new();
+        app.init_resource::<PhysicsConfig>()
+            .init_resource::<BorderConfig>()
+            .add_message::<WallBounce>()
+            .add_systems(Update, wall_collision_system);
+        app.world_mut().spawn(Window {
+            resolution: bevy::window::WindowResolution::new(300, 300),
+            ..default()
+        });
+        let entity = app
+            .world_mut()
+            .spawn((
+                Speaki,
+                Transform::from_xyz(100.0, -100.0, 0.0)
+                    .with_rotation(Quat::from_rotation_z(std::f32::consts::FRAC_PI_4)),
+                Velocity::default(),
+                RotationState::default(),
+                SpeakiSize(100.0),
+            ))
+            .id();
+        app.update();
+        let transform = app.world().get::<Transform>(entity).unwrap();
+        for x in [-50.0, 50.0] {
+            for y in [-50.0, 50.0] {
+                let corner = transform.transform_point(Vec3::new(x, y, 0.0));
+                assert!(
+                    corner.x.abs() <= 150.001 && corner.y.abs() <= 150.001,
+                    "clipped corner: {corner:?}"
+                );
+            }
+        }
     }
 
     #[test]

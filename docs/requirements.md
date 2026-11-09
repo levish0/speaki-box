@@ -31,6 +31,7 @@ If the frame rate stays below 20 fps, virtual gameplay time slows instead of jum
 Pointer throw sampling uses real time so a render stall cannot amplify the throw.
 The first batch of native window positions establishes the inertia anchor and does not push speakis.
 Held speakis follow the cursor. Collisions and walls must not displace them.
+Wall collision accounts for the full rotated sprite, including its scale, when the sprite fits inside the window.
 Merge mode combines nearby speakis of similar size. It preserves a shiny participant and places the result at the midpoint.
 
 ## Assets, audio, and browser

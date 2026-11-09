@@ -62,8 +62,8 @@ impl Plugin for SpeakiPlugin {
                     movement_system,
                     speaki_merge_system,
                     speaki_collision_system,
-                    wall_collision_system,
                     rotation_system,
+                    wall_collision_system,
                 )
                     .chain(),
             )
