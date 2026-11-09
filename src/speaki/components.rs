@@ -101,11 +101,11 @@ pub struct CurrentAudio {
 }
 
 /// Shiny speaki marker - rare glowing variant
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct Shiny {
     pub base_color: Color,
-    pub pulse_phase: f32,        // Random phase offset for each shiny
-    pub next_explosion: f32,     // Time until next explosion (seconds from spawn)
+    pub pulse_phase: f32,    // Random phase offset for each shiny
+    pub next_explosion: f32, // Time until next explosion (seconds from spawn)
 }
 
 impl Default for Shiny {
@@ -121,8 +121,8 @@ impl Default for Shiny {
 /// Shockwave visual effect - expands and fades out
 #[derive(Component)]
 pub struct Shockwave {
-    pub elapsed: f32,      // Time since spawn
-    pub duration: f32,     // Total animation duration
-    pub max_radius: f32,   // Maximum size to reach
-    pub color: Color,      // Base color
+    pub elapsed: f32,    // Time since spawn
+    pub duration: f32,   // Total animation duration
+    pub max_radius: f32, // Maximum size to reach
+    pub color: Color,    // Base color
 }

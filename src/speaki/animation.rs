@@ -1,17 +1,18 @@
 use bevy::prelude::*;
 use rand::RngExt;
 
-use crate::components::*;
-use crate::resources::*;
+use super::config::{ShinyConfig, SpeakiConfig};
+use crate::assets::{ImageGroups, SpriteAssets};
+use crate::speaki::components::{BlinkTimer, Dragged, Shiny, Speaki, SpeakiSize, SpriteState};
 
 /// Handle eye blinking animation
 pub fn blink_system(
     mut query: Query<(&mut SpriteState, &mut BlinkTimer), With<Speaki>>,
     sprites: Res<SpriteAssets>,
-    config: Res<GameConfig>,
+    config: Res<SpeakiConfig>,
     time: Res<Time>,
 ) {
-    if !config.eye_blink_enabled || !sprites.loaded {
+    if !config.eye_blink_enabled || sprites.states.is_empty() {
         return;
     }
 
@@ -24,10 +25,10 @@ pub fn blink_system(
                 // Open eyes
                 blink.is_blinking = false;
 
-                if let Some(state) = sprites.states.get(sprite_state.current_index) {
-                    if let Some(open_idx) = state.eye_open {
-                        sprite_state.current_index = open_idx;
-                    }
+                if let Some(state) = sprites.states.get(sprite_state.current_index)
+                    && let Some(open_idx) = state.eye_open
+                {
+                    sprite_state.current_index = open_idx;
                 }
 
                 if blink.double_blink {
@@ -48,10 +49,10 @@ pub fn blink_system(
                 blink.is_blinking = true;
                 blink.blink_open_time = 0.1; // 100ms
 
-                if let Some(state) = sprites.states.get(sprite_state.current_index) {
-                    if let Some(close_idx) = state.eye_close {
-                        sprite_state.current_index = close_idx;
-                    }
+                if let Some(state) = sprites.states.get(sprite_state.current_index)
+                    && let Some(close_idx) = state.eye_close
+                {
+                    sprite_state.current_index = close_idx;
                 }
 
                 blink.last_blink_time = current_time;
@@ -69,11 +70,14 @@ pub fn blink_system(
 pub fn sprite_update_system(
     mut query: Query<
         (&SpriteState, &SpeakiSize, &mut Sprite),
-        (With<Speaki>, Changed<SpriteState>),
+        (
+            With<Speaki>,
+            Or<(Changed<SpriteState>, Changed<SpeakiSize>)>,
+        ),
     >,
     sprites: Res<SpriteAssets>,
 ) {
-    if !sprites.loaded {
+    if sprites.states.is_empty() {
         return;
     }
 

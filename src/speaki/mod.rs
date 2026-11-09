@@ -1,0 +1,9 @@
+pub(crate) mod animation;
+pub(crate) mod components;
+pub(crate) mod config;
+pub(crate) mod effects;
+pub(crate) mod input;
+pub(crate) mod messages;
+pub(crate) mod physics;
+pub(crate) mod plugin;
+pub(crate) mod spawn;

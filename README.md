@@ -57,7 +57,7 @@ All parameters can be adjusted in real-time via the settings panel (`Q` key):
 | Audio    | Master volume, grab/bounce/create/remove/idle volumes, idle frequency                        |
 | Physics  | Gravity, bounce, friction, rotation speed, collision damping, throwing power, window inertia |
 | Speaki   | Size, click-to-add toggle, eye blink toggle, shiny settings, merge (Suika) settings          |
-| Window   | Background color, title bar visibility, fullscreen toggle                                    |
+| Window   | Background color and opacity, title bar visibility, fullscreen toggle                        |
 | Border   | Left/right/up/down margins                                                                   |
 
 ## Controls
@@ -81,16 +81,22 @@ All parameters can be adjusted in real-time via the settings panel (`Q` key):
 
 ```bash
 # Normal mode
-cargo run
+just run
 
-# Transparent window mode (platform-dependent support)
-cargo run -- --transparent
+# Transparent native window
+just transparent
 
 # Or using environment variable
 SPEAKI_TRANSPARENT=1 cargo run
 ```
 
-> Note: Transparent window may not work on all platforms. Known to have issues on Windows 11 with NVIDIA GPUs.
+Windows transparent mode selects DX12 and DirectComposition with premultiplied alpha.
+This avoids the ordinary opaque DX12 swapchain and the driver-dependent Vulkan transparency path.
+Press `Q`, open **Window**, and change **BG Alpha** to adjust the background opacity.
+The app selects window transparency at startup. The ordinary window remains opaque.
+See [native validation steps](docs/development.md#check-a-transparent-window) and [the rendering architecture](docs/architecture.md#windows-transparency).
+
+On PowerShell, use `$env:SPEAKI_TRANSPARENT = '1'` before `just run` to select transparent mode through the environment.
 
 ## Settings
 
@@ -104,9 +110,17 @@ Press `Q` to open settings. Available options:
 
 ## Building
 
+Install Rust stable (1.97.1 or newer) and [just](https://github.com/casey/just).
+Run these commands from the repository root:
+
 ```bash
-cargo build --release
+just verify
+just build-release
 ```
+
+The executable embeds the images, audio, and font.
+Use `just` to list all commands, including browser checks and local serving.
+See [development](docs/development.md), [architecture](docs/architecture.md), [requirements](docs/requirements.md), and [conventions](docs/conventions.md).
 
 ## License
 

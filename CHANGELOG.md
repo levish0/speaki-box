@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- Upgrade Bevy to 0.20.1, bevy_egui to 0.43.1, bevy_kira_audio to 0.27.1, and bevy_embedded_assets to 0.17.0.
+- Update the remaining direct crates and the locked dependency graph. Require Rust 1.97.1 or newer.
+- Keep startup, window management, rendering, assets, speaki behavior, audio, and settings in explicit modules.
+- Run physics at 60 Hz independently of display refresh rate.
+- Add agent instructions, technical writing rules, architecture and development documents, and `just` commands.
+
+### Fixed
+- Use DX12, DirectComposition Visual presentation, and premultiplied alpha for Windows transparent mode.
+- Draw the settings panel after 2D post-processing so tone mapping cannot hide its output.
+- Enable background opacity controls in transparent mode. Clear fully transparent pixels without residual RGB.
+- Release dragged speakis over settings, outside the window, and after focus loss.
+- Keep held speakis anchored during collisions. Resolve coincident collision pairs.
+- Preserve the shiny participant and midpoint when speakis merge.
+- Keep queued voice handles until playback stops. Associate creation voices with the new speaki.
+- Use explicit sprite depth for pointer selection and draw order. Correct expression group indices.
+
 ## [0.2.3] - 2026-02-02
 
 ### Changed

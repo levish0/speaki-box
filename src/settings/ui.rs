@@ -1,54 +1,12 @@
 use bevy::prelude::*;
-use bevy_egui::EguiContexts;
-use bevy_egui::egui;
+use bevy_egui::{EguiContexts, egui};
 
-use crate::resources::*;
+use crate::audio::config::AudioConfig;
+use crate::speaki::config::{BorderConfig, MergeConfig, PhysicsConfig, ShinyConfig, SpeakiConfig};
+use crate::window::config::{WindowConfig, WindowPositionTracker};
 
 #[derive(Resource, Default)]
 pub struct SettingsOpen(pub bool);
-
-#[derive(Resource, Default)]
-pub struct FontLoaded(pub bool);
-
-pub fn setup_fonts_system(
-    mut contexts: EguiContexts,
-    mut font_loaded: ResMut<FontLoaded>,
-) -> Result {
-    if font_loaded.0 {
-        return Ok(());
-    }
-
-    let ctx = contexts.ctx_mut()?;
-
-    let mut fonts = egui::FontDefinitions::default();
-
-    fonts.font_data.insert(
-        "pretendard-jp".to_owned(),
-        egui::FontData::from_static(include_bytes!(
-            "../../assets/fonts/PretendardJP-Regular.otf"
-        ))
-        .into(),
-    );
-
-    // Set as primary font for proportional text
-    fonts
-        .families
-        .entry(egui::FontFamily::Proportional)
-        .or_default()
-        .insert(0, "pretendard-jp".to_owned());
-
-    // Also set for monospace if desired
-    fonts
-        .families
-        .entry(egui::FontFamily::Monospace)
-        .or_default()
-        .insert(0, "pretendard-jp".to_owned());
-
-    ctx.set_fonts(fonts);
-    font_loaded.0 = true;
-
-    Ok(())
-}
 
 /// Toggle settings with Q key
 pub fn toggle_settings_system(
@@ -60,23 +18,14 @@ pub fn toggle_settings_system(
     }
 }
 
-/// Toggle title bar with Alt + T
-pub fn toggle_titlebar_system(
-    keyboard: Res<ButtonInput<KeyCode>>,
-    mut game_config: ResMut<GameConfig>,
-) {
-    if keyboard.pressed(KeyCode::AltLeft) && keyboard.just_pressed(KeyCode::KeyT) {
-        game_config.window_decorations = !game_config.window_decorations;
-    }
-}
-
 /// Render settings UI
 pub fn settings_ui_system(
     mut contexts: EguiContexts,
     settings_open: Res<SettingsOpen>,
     mut audio_config: ResMut<AudioConfig>,
     mut physics_config: ResMut<PhysicsConfig>,
-    mut game_config: ResMut<GameConfig>,
+    mut game_config: ResMut<SpeakiConfig>,
+    mut window_config: ResMut<WindowConfig>,
     mut border_config: ResMut<BorderConfig>,
     mut window_tracker: ResMut<WindowPositionTracker>,
     mut shiny_config: ResMut<ShinyConfig>,
@@ -216,21 +165,33 @@ pub fn settings_ui_system(
                             ui.checkbox(&mut shiny_config.explosion_enabled, "Enabled");
                             ui.checkbox(&mut shiny_config.shockwave_enabled, "Shockwave");
                             ui.add(
-                                egui::Slider::new(&mut shiny_config.explosion_radius, 100.0..=800.0)
-                                    .text("Radius"),
+                                egui::Slider::new(
+                                    &mut shiny_config.explosion_radius,
+                                    100.0..=800.0,
+                                )
+                                .text("Radius"),
                             );
                             ui.add(
                                 egui::Slider::new(&mut shiny_config.explosion_force, 10.0..=150.0)
                                     .text("Force"),
                             );
                             ui.add(
-                                egui::Slider::new(&mut shiny_config.explosion_interval_min, 1.0..=10.0)
-                                    .text("Min Interval"),
+                                egui::Slider::new(
+                                    &mut shiny_config.explosion_interval_min,
+                                    1.0..=10.0,
+                                )
+                                .text("Min Interval"),
                             );
                             ui.add(
-                                egui::Slider::new(&mut shiny_config.explosion_interval_max, 2.0..=20.0)
-                                    .text("Max Interval"),
+                                egui::Slider::new(
+                                    &mut shiny_config.explosion_interval_max,
+                                    2.0..=20.0,
+                                )
+                                .text("Max Interval"),
                             );
+                            shiny_config.explosion_interval_max = shiny_config
+                                .explosion_interval_max
+                                .max(shiny_config.explosion_interval_min);
                             ui.separator();
                             ui.label("Merge (Suika)");
                             ui.checkbox(&mut merge_config.enabled, "Enabled");
@@ -256,33 +217,38 @@ pub fn settings_ui_system(
                     egui::CollapsingHeader::new("Window")
                         .default_open(false)
                         .show(ui, |ui| {
-                            let is_transparent = game_config.window_transparent;
-
-                            // BG color: only disabled in transparent mode
-                            ui.add_enabled_ui(!is_transparent, |ui| {
-                                ui.horizontal(|ui| {
-                                    ui.label("BG");
-                                    ui.color_edit_button_rgb(&mut game_config.background_color);
-                                    let [r, g, b] = game_config.background_color;
-                                    let hex = format!(
-                                        "#{:02X}{:02X}{:02X}",
-                                        (r * 255.0) as u8,
-                                        (g * 255.0) as u8,
-                                        (b * 255.0) as u8
-                                    );
-                                    ui.label(hex);
-                                });
+                            ui.horizontal(|ui| {
+                                ui.label("BG");
+                                ui.color_edit_button_rgb(&mut window_config.background_color);
+                                let [r, g, b] = window_config.background_color;
+                                let hex = format!(
+                                    "#{:02X}{:02X}{:02X}",
+                                    (r * 255.0) as u8,
+                                    (g * 255.0) as u8,
+                                    (b * 255.0) as u8
+                                );
+                                ui.label(hex);
                             });
 
-                            // BG Alpha: always disabled (transparent window not supported on this platform)
-                            ui.add_enabled(
-                                false,
-                                egui::Slider::new(&mut game_config.background_alpha, 0.0..=1.0)
+                            #[cfg(not(target_arch = "wasm32"))]
+                            {
+                                let is_transparent = window_config.is_transparent();
+                                // Window transparency is selected before the native window is created.
+                                ui.add_enabled(
+                                    is_transparent,
+                                    egui::Slider::new(
+                                        &mut window_config.background_alpha,
+                                        0.0..=1.0,
+                                    )
                                     .text("BG Alpha"),
-                            );
+                                );
 
-                            ui.checkbox(&mut game_config.window_decorations, "Title Bar");
-                            ui.checkbox(&mut game_config.fullscreen, "Fullscreen");
+                                if !is_transparent {
+                                    ui.label("Restart with --transparent to enable BG Alpha.");
+                                }
+                                ui.checkbox(&mut window_config.decorations, "Title Bar");
+                                ui.checkbox(&mut window_config.fullscreen, "Fullscreen");
+                            }
                         });
 
                     egui::CollapsingHeader::new("Border")
@@ -304,60 +270,4 @@ pub fn settings_ui_system(
         });
 
     Ok(())
-}
-
-/// Sync background color from config to ClearColor
-pub fn sync_background_color_system(
-    game_config: Res<GameConfig>,
-    mut clear_color: ResMut<ClearColor>,
-) {
-    // Always use Color::NONE in transparent mode
-    if game_config.window_transparent {
-        clear_color.0 = Color::NONE;
-    } else {
-        let [r, g, b] = game_config.background_color;
-        clear_color.0 = Color::srgba(r, g, b, game_config.background_alpha);
-    }
-}
-
-/// Sync window settings from config (only decorations, transparency can't change at runtime)
-pub fn sync_window_settings_system(game_config: Res<GameConfig>, mut windows: Query<&mut Window>) {
-    use bevy::window::WindowMode;
-
-    for mut window in windows.iter_mut() {
-        window.decorations = game_config.window_decorations;
-
-        let target_mode = if game_config.fullscreen {
-            WindowMode::BorderlessFullscreen(bevy::window::MonitorSelection::Current)
-        } else {
-            WindowMode::Windowed
-        };
-
-        if window.mode != target_mode {
-            window.mode = target_mode;
-        }
-    }
-}
-
-/// Toggle bloom effect based on shiny config
-pub fn sync_bloom_system(
-    mut commands: Commands,
-    shiny_config: Res<ShinyConfig>,
-    camera_query: Query<(Entity, Option<&bevy::post_process::bloom::Bloom>), With<Camera2d>>,
-) {
-    for (entity, bloom) in camera_query.iter() {
-        if shiny_config.bloom_enabled && bloom.is_none() {
-            // Add bloom
-            commands.entity(entity).insert(bevy::post_process::bloom::Bloom {
-                intensity: 0.5,
-                low_frequency_boost: 0.7,
-                low_frequency_boost_curvature: 0.5,
-                high_pass_frequency: 2.0,
-                ..bevy::post_process::bloom::Bloom::OLD_SCHOOL
-            });
-        } else if !shiny_config.bloom_enabled && bloom.is_some() {
-            // Remove bloom
-            commands.entity(entity).remove::<bevy::post_process::bloom::Bloom>();
-        }
-    }
 }

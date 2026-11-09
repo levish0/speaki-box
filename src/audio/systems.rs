@@ -2,20 +2,21 @@ use bevy::prelude::*;
 use bevy_kira_audio::prelude::*;
 use rand::RngExt;
 
-use crate::components::*;
-use crate::events::*;
-use crate::resources::*;
+use super::config::AudioConfig;
+use crate::assets::{AudioAssets, ImageGroups, SpriteAssets, VoiceGroups};
+use crate::speaki::components::{CurrentAudio, Dragged, IdleVoiceTimer, Speaki, SpriteState};
+use crate::speaki::messages::{PlayVoice, SpeakiMerged, WallBounce};
 
 /// Handle voice play events
 pub fn play_voice_system(
-    mut events: MessageReader<PlayVoiceEvent>,
+    mut events: MessageReader<PlayVoice>,
     audio_assets: Res<AudioAssets>,
     audio_config: Res<AudioConfig>,
     audio: Res<Audio>,
     mut speaki_query: Query<(&mut CurrentAudio, &mut SpriteState), With<Speaki>>,
     sprites: Res<SpriteAssets>,
 ) {
-    if !audio_assets.loaded {
+    if audio_assets.voices.is_empty() {
         return;
     }
 
@@ -35,16 +36,16 @@ pub fn play_voice_system(
                 .handle();
 
             // If this voice is for a specific speaki, track it and open mouth
-            if let Some(entity) = event.entity {
-                if let Ok((mut current_audio, mut sprite_state)) = speaki_query.get_mut(entity) {
-                    current_audio.handle = Some(instance_handle);
+            if let Some(entity) = event.entity
+                && let Ok((mut current_audio, mut sprite_state)) = speaki_query.get_mut(entity)
+            {
+                current_audio.handle = Some(instance_handle);
 
-                    // Open mouth if current image has mouth_open state
-                    if let Some(state) = sprites.states.get(sprite_state.current_index) {
-                        if let Some(mouth_open_idx) = state.mouth_open {
-                            sprite_state.current_index = mouth_open_idx;
-                        }
-                    }
+                // Open mouth if current image has mouth_open state
+                if let Some(state) = sprites.states.get(sprite_state.current_index)
+                    && let Some(mouth_open_idx) = state.mouth_open
+                {
+                    sprite_state.current_index = mouth_open_idx;
                 }
             }
         }
@@ -54,30 +55,20 @@ pub fn play_voice_system(
 /// Check for finished audio and close mouth
 pub fn mouth_animation_system(
     mut query: Query<(&mut CurrentAudio, &mut SpriteState), With<Speaki>>,
-    audio_instances: Res<Assets<AudioInstance>>,
+    audio: Res<Audio>,
     sprites: Res<SpriteAssets>,
 ) {
     for (mut current_audio, mut sprite_state) in query.iter_mut() {
         if let Some(handle) = &current_audio.handle {
-            let should_close_mouth;
-
-            // Check if audio is still playing
-            if let Some(instance) = audio_instances.get(handle) {
-                let state = instance.state();
-                should_close_mouth = state == PlaybackState::Stopped;
-            } else {
-                // Handle is invalid (audio finished and removed), close mouth
-                should_close_mouth = true;
-            }
+            let should_close_mouth = audio.state(handle) == PlaybackState::Stopped;
 
             if should_close_mouth {
                 // Audio finished, close mouth (40% chance like JS)
-                if rand::random::<f32>() < 0.4 {
-                    if let Some(state_node) = sprites.states.get(sprite_state.current_index) {
-                        if let Some(mouth_close_idx) = state_node.mouth_close {
-                            sprite_state.current_index = mouth_close_idx;
-                        }
-                    }
+                if rand::random::<f32>() < 0.4
+                    && let Some(state_node) = sprites.states.get(sprite_state.current_index)
+                    && let Some(mouth_close_idx) = state_node.mouth_close
+                {
+                    sprite_state.current_index = mouth_close_idx;
                 }
                 current_audio.handle = None;
             }
@@ -87,8 +78,8 @@ pub fn mouth_animation_system(
 
 /// Handle wall bounce events and play sound
 pub fn bounce_voice_system(
-    mut bounce_events: MessageReader<WallBounceEvent>,
-    mut voice_events: MessageWriter<PlayVoiceEvent>,
+    mut bounce_events: MessageReader<WallBounce>,
+    mut voice_events: MessageWriter<PlayVoice>,
     voice_groups: Res<VoiceGroups>,
     audio_config: Res<AudioConfig>,
     mut query: Query<(&mut SpriteState, &mut IdleVoiceTimer), With<Speaki>>,
@@ -99,7 +90,7 @@ pub fn bounce_voice_system(
         // Play bounce voice
         if !voice_groups.bounce.is_empty() {
             let idx = voice_groups.bounce[rand::rng().random_range(0..voice_groups.bounce.len())];
-            voice_events.write(PlayVoiceEvent {
+            voice_events.write(PlayVoice {
                 entity: Some(event.entity),
                 voice_index: idx,
                 volume: audio_config.bounce_volume,
@@ -119,8 +110,8 @@ pub fn bounce_voice_system(
 
 /// Handle merge events and play sound
 pub fn merge_voice_system(
-    mut merge_events: MessageReader<MergeSpeakiEvent>,
-    mut voice_events: MessageWriter<PlayVoiceEvent>,
+    mut merge_events: MessageReader<SpeakiMerged>,
+    mut voice_events: MessageWriter<PlayVoice>,
     voice_groups: Res<VoiceGroups>,
     audio_config: Res<AudioConfig>,
 ) {
@@ -128,8 +119,8 @@ pub fn merge_voice_system(
         // Play create voice for merge (sounds like a new bigger speaki)
         if !voice_groups.create.is_empty() {
             let idx = voice_groups.create[rand::rng().random_range(0..voice_groups.create.len())];
-            voice_events.write(PlayVoiceEvent {
-                entity: Some(event.entity1), // Play on the remaining speaki
+            voice_events.write(PlayVoice {
+                entity: Some(event.entity), // Play on the remaining speaki
                 voice_index: idx,
                 volume: audio_config.create_volume,
             });
@@ -143,7 +134,7 @@ pub fn idle_voice_system(
         (&mut IdleVoiceTimer, &mut SpriteState, Entity),
         (With<Speaki>, Without<Dragged>),
     >,
-    mut voice_events: MessageWriter<PlayVoiceEvent>,
+    mut voice_events: MessageWriter<PlayVoice>,
     voice_groups: Res<VoiceGroups>,
     image_groups: Res<ImageGroups>,
     audio_config: Res<AudioConfig>,
@@ -167,7 +158,7 @@ pub fn idle_voice_system(
                 if !voice_groups.idle2.is_empty() {
                     let idx =
                         voice_groups.idle2[rand::rng().random_range(0..voice_groups.idle2.len())];
-                    voice_events.write(PlayVoiceEvent {
+                    voice_events.write(PlayVoice {
                         entity: Some(entity),
                         voice_index: idx,
                         volume: audio_config.idle_volume,
@@ -182,7 +173,7 @@ pub fn idle_voice_system(
                 if !voice_groups.idle.is_empty() {
                     let idx =
                         voice_groups.idle[rand::rng().random_range(0..voice_groups.idle.len())];
-                    voice_events.write(PlayVoiceEvent {
+                    voice_events.write(PlayVoice {
                         entity: Some(entity),
                         voice_index: idx,
                         volume: audio_config.idle_volume,
